@@ -1,9 +1,14 @@
 package database;
 
+import catalogs.TaskCatalog;
+import org.example.models.Task;
+
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.PreparedStatement;import java.sql.SQLException;
+import java.util.Date;
+import java.util.Scanner;
 
 public class TaskController{
 
@@ -106,6 +111,8 @@ public class TaskController{
         stmt.close();
     }
 
+
+
     public void insertTask(Connection conn, String title, String description) {
         String sqlInsert = "INSERT INTO tasks (title, description) VALUES (?, ?)";
 
@@ -121,6 +128,65 @@ public class TaskController{
         } catch (SQLException e) {
             System.out.println("Error inserting task: " + e.getMessage());
         }
+    }
+
+    public void createTaskFromUserInput(Scanner scanner, TaskCatalog taskCat) {
+        System.out.println("=== Create a New Task ===");
+
+        System.out.print("Title: ");
+        String title = scanner.nextLine();
+
+        System.out.print("Description: ");
+        String description = scanner.nextLine();
+
+        System.out.print("Priority Level (integer): ");
+        int priority = 1; // default
+        try {
+            priority = Integer.parseInt(scanner.nextLine());
+        } catch (NumberFormatException e) {
+            System.out.println("Invalid input, using default priority 1.");
+        }
+
+        System.out.print("Status (default 'Pending'): ");
+        String status = scanner.nextLine();
+        if (status.isEmpty()) {
+            status = "null";
+        }
+
+        System.out.print("Due in days from today (integer, optional, press Enter to skip): ");
+        Date dueDate = null;
+        String dueInput = scanner.nextLine();
+        if (!dueInput.isEmpty()) {
+            try {
+                int days = Integer.parseInt(dueInput);
+                dueDate = new Date(System.currentTimeMillis() + days * 24L * 60 * 60 * 1000);
+            } catch (NumberFormatException e) {
+                System.out.println("Invalid input, no due date set.");
+            }
+        }
+
+        System.out.print("Project ID (integer): ");
+        int projectId = 0;
+        try {
+            projectId = Integer.parseInt(scanner.nextLine());
+        } catch (NumberFormatException e) {
+            System.out.println("Invalid input, using project ID 0.");
+        }
+
+        // Build Task object
+        Task task = new Task(
+                title,
+                description,
+                new Date(),    // creation date is now
+                priority,
+                status,
+                dueDate,
+                projectId
+        );
+
+        taskCat.addTask(task);
+
+
     }
 
 }
