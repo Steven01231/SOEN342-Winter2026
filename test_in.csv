@@ -1,0 +1,3 @@
+TaskName,Description,Subtask,Status,Priority,DueDate,ProjectName,ProjectDescription,Collaborator,CollaboratorCategory
+Fix Login,Fix the auth bug,None,OPEN,3,2026-05-01,WebPortal,Main website project,Tiffany,SENIOR
+Write Tests,Unit testing,None,OPEN,2,2026-05-10,WebPortal,Main website project,Steven,INTERMEDIATE
