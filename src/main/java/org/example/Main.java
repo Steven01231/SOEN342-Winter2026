@@ -4,11 +4,13 @@ import java.io.File;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.List;
 import java.util.Scanner;
 
 import catalogs.*;
 import database.TaskController;
 import org.example.controllers.CSVController;
+import org.example.models.Task;
 import org.example.utils.CSVExporter;
 
 
@@ -62,6 +64,7 @@ public class Main {
             System.out.println("10. List Recurrence Patterns");
             System.out.println("11. Import Tasks from CSV");
             System.out.println("12. Export All Tasks to CSV");
+            System.out.println("13. Search Tasks (Keyword)");
             System.out.println("0. Exit");
             System.out.print("Select an option: ");
 
@@ -130,6 +133,41 @@ public class Main {
                         System.out.println("Export successful! Check your project folder.");
                     } catch (Exception e) {
                         System.err.println("Export failed: " + e.getMessage());
+                    }
+                    break;
+                case 13:
+                    System.out.println("\n--- Advanced Task Search ---");
+                    System.out.println("(Press ENTER to skip any filter)");
+
+                    System.out.print("Keyword (title/desc): ");
+                    String searchKeyword = scanner.nextLine();
+
+                    System.out.print("Status filter (todo, in_progress, blocked, done): ");
+                    String searchStatus = scanner.nextLine();
+
+                    //dynamic search
+                    List<org.example.models.Task> searchResults = taskCat.advancedSearch(searchKeyword, searchStatus);
+
+                    if (searchResults.isEmpty()) {
+                        System.out.println("No tasks found matching your criteria.");
+                    } else {
+                        System.out.println("\nFound " + searchResults.size() + " matching tasks:");
+                        for (org.example.models.Task t : searchResults) {
+                            System.out.println(" - [" + t.getStatus() + "] " + t.getTitle() + " | Due: " + t.getDueDate());
+                        }
+
+                        System.out.print("\nDo you want to export these results to CSV? (y/n): ");
+                        if (scanner.nextLine().trim().equalsIgnoreCase("y")) {
+                            System.out.print("Enter export file name (e.g., search_results.csv): ");
+                            String outPath = scanner.nextLine();
+                            try {
+                                org.example.utils.CSVExporter exp = new org.example.utils.CSVExporter();
+                                exp.export(searchResults, outPath);
+                                System.out.println("Search results exported successfully to " + outPath);
+                            } catch (Exception e) {
+                                System.err.println("Export failed: " + e.getMessage());
+                            }
+                        }
                     }
                     break;
                 case 0:

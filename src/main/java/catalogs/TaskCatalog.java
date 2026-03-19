@@ -99,16 +99,38 @@ public class TaskCatalog {
                 '}';
     }
 
-    public List<Task> searchTasks(String keyword) {
-        List<Task> searchResults = new ArrayList<>();
+    public List<Task> advancedSearch(String keyword, String status) {
+        List<Task> results = new ArrayList<>();
 
-        String query = "SELECT * FROM task WHERE title LIKE ? OR description LIKE ?";
+        StringBuilder sql = new StringBuilder("SELECT * FROM task WHERE 1=1 ");
+        List<Object> params = new ArrayList<>();
+        boolean hasCriteria = false;
 
-        try (PreparedStatement pstmt = conn.prepareStatement(query)) {
-            String searchPattern = "%" + keyword + "%";
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            sql.append("AND (title LIKE ? OR description LIKE ?) ");
+            params.add("%" + keyword.trim() + "%");
+            params.add("%" + keyword.trim() + "%");
+            hasCriteria = true;
+        }
 
-            pstmt.setString(1, searchPattern); // title
-            pstmt.setString(2, searchPattern); // description
+        if (status != null && !status.trim().isEmpty()) {
+            sql.append("AND status = ? ");
+            params.add(status.trim().toLowerCase());
+            hasCriteria = true;
+        }
+
+        if (!hasCriteria) {
+            //only show "open" tasks if there is no criteria (todo, in_progress, blocked)
+            sql.append("AND status IN ('todo', 'in_progress', 'blocked') ");
+        }
+
+        //sort by due date ascending
+        sql.append("ORDER BY due_date ASC");
+
+        try (PreparedStatement pstmt = conn.prepareStatement(sql.toString())) {
+            for (int i = 0; i < params.size(); i++) {
+                pstmt.setObject(i + 1, params.get(i));
+            }
 
             try (ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) {
@@ -119,14 +141,12 @@ public class TaskCatalog {
                     task.setStatus(rs.getString("status"));
                     task.setDueDate(new java.util.Date(rs.getLong("due_date")));
                     task.setProjectId(rs.getInt("project_id"));
-
-                    searchResults.add(task);
+                    results.add(task);
                 }
             }
         } catch (SQLException e) {
             System.err.println("Error searching tasks: " + e.getMessage());
         }
-
-        return searchResults;
+        return results;
     }
 }
