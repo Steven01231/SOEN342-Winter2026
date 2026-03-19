@@ -1,4 +1,5 @@
 package org.example;
+import java.io.File;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -7,6 +8,8 @@ import java.util.Scanner;
 
 import catalogs.*;
 import database.TaskController;
+import org.example.controllers.CSVController;
+import org.example.utils.CSVExporter;
 
 
 public class Main {
@@ -26,6 +29,7 @@ public class Main {
 
         Scanner scanner = new Scanner(System.in);
         boolean exit = false;
+        CSVController csvController = new CSVController(proCat, taskCat);
 
         try {
             conn = DriverManager.getConnection(url);
@@ -39,8 +43,6 @@ public class Main {
                 subCat = new SubtaskCatalog(conn);
                 tagCat = new TagCatalog(conn);
                 taskCat = new TaskCatalog(conn);
-
-
             }
         } catch (SQLException e) {
             System.err.println("Connection failed: " + e.getMessage());
@@ -58,6 +60,8 @@ public class Main {
             System.out.println("8. List Records");
             System.out.println("9. Set Recurrence Pattern for Task");
             System.out.println("10. List Recurrence Patterns");
+            System.out.println("11. Import Tasks from CSV");
+            System.out.println("12. Export All Tasks to CSV");
             System.out.println("0. Exit");
             System.out.print("Select an option: ");
 
@@ -104,6 +108,29 @@ public class Main {
                 case 10:
                     System.out.println("Listing all Recurrence Patterns...");
                     // call method to list recurrence patterns
+                    break;
+                case 11:
+                    System.out.println("--- Import Tasks ---");
+                    System.out.print("Enter CSV file path (e.g., test_in.csv): ");
+                    String importPath = scanner.nextLine();
+                    try {
+                        csvController.importFromCSV(new File(importPath));
+                        System.out.println("Import successful! Use Option 4 to see them.");
+                    } catch (Exception e) {
+                        System.err.println("Import failed: " + e.getMessage());
+                    }
+                    break;
+                case 12:
+                    System.out.println("--- Export Tasks ---");
+                    System.out.print("Enter destination file name (e.g., my_export.csv): ");
+                    String exportPath = scanner.nextLine();
+                    try {
+                        CSVExporter exporter = new org.example.utils.CSVExporter();
+                        exporter.export(taskCat.getTasks(), exportPath);
+                        System.out.println("Export successful! Check your project folder.");
+                    } catch (Exception e) {
+                        System.err.println("Export failed: " + e.getMessage());
+                    }
                     break;
                 case 0:
                     System.out.println("Exiting... Goodbye!");
