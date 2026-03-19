@@ -101,8 +101,19 @@ public class Main {
                     // call method to add record
                     break;
                 case 8:
-                    System.out.println("Listing all Records...");
-                    // call method to list records
+                    System.out.println("\n--- View Task Activity History ---");
+                    System.out.print("Enter the Task ID you want to view: ");
+                    try {
+                        int historyTaskId = scanner.nextInt();
+                        scanner.nextLine();
+
+                        System.out.println("Fetching history for Task " + historyTaskId + "...");
+                        recCat.printTaskHistory(historyTaskId);
+
+                    } catch (java.util.InputMismatchException e) {
+                        System.out.println("Invalid input. Please enter a number.");
+                        scanner.nextLine();
+                    }
                     break;
                 case 9:
                     System.out.println("Setting Recurrence Pattern for Task...");
