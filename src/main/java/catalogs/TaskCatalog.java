@@ -98,4 +98,35 @@ public class TaskCatalog {
                 "tasks=" + tasks +
                 '}';
     }
+
+    public List<Task> searchTasks(String keyword) {
+        List<Task> searchResults = new ArrayList<>();
+
+        String query = "SELECT * FROM task WHERE title LIKE ? OR description LIKE ?";
+
+        try (PreparedStatement pstmt = conn.prepareStatement(query)) {
+            String searchPattern = "%" + keyword + "%";
+
+            pstmt.setString(1, searchPattern); // title
+            pstmt.setString(2, searchPattern); // description
+
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    Task task = new Task(rs.getString("title"), rs.getString("description"));
+                    task.setTaskId(rs.getInt("id"));
+                    task.setCreationDate(new java.util.Date(rs.getLong("creation_date")));
+                    task.setPriorityLevel(rs.getInt("priority_level"));
+                    task.setStatus(rs.getString("status"));
+                    task.setDueDate(new java.util.Date(rs.getLong("due_date")));
+                    task.setProjectId(rs.getInt("project_id"));
+
+                    searchResults.add(task);
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error searching tasks: " + e.getMessage());
+        }
+
+        return searchResults;
+    }
 }
