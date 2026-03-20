@@ -1,12 +1,17 @@
 package org.example;
+import java.io.File;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.List;
 import java.util.Scanner;
 
 import catalogs.*;
 import database.TaskController;
+import org.example.controllers.CSVController;
+import org.example.models.Task;
+import org.example.utils.CSVExporter;
 
 
 public class Main {
@@ -26,6 +31,7 @@ public class Main {
 
         Scanner scanner = new Scanner(System.in);
         boolean exit = false;
+        CSVController csvController = new CSVController(proCat, taskCat);
 
         try {
             conn = DriverManager.getConnection(url);
@@ -39,8 +45,6 @@ public class Main {
                 subCat = new SubtaskCatalog(conn);
                 tagCat = new TagCatalog(conn);
                 taskCat = new TaskCatalog(conn);
-
-
             }
         } catch (SQLException e) {
             System.err.println("Connection failed: " + e.getMessage());
@@ -58,6 +62,9 @@ public class Main {
             System.out.println("8. List Records");
             System.out.println("9. Set Recurrence Pattern for Task");
             System.out.println("10. List Recurrence Patterns");
+            System.out.println("11. Import Tasks from CSV");
+            System.out.println("12. Export All Tasks to CSV");
+            System.out.println("13. Search Tasks (Keyword)");
             System.out.println("0. Exit");
             System.out.print("Select an option: ");
 
@@ -94,8 +101,19 @@ public class Main {
                     // call method to add record
                     break;
                 case 8:
-                    System.out.println("Listing all Records...");
-                    // call method to list records
+                    System.out.println("\n--- View Task Activity History ---");
+                    System.out.print("Enter the Task ID you want to view: ");
+                    try {
+                        int historyTaskId = scanner.nextInt();
+                        scanner.nextLine();
+
+                        System.out.println("Fetching history for Task " + historyTaskId + "...");
+                        recCat.printTaskHistory(historyTaskId);
+
+                    } catch (java.util.InputMismatchException e) {
+                        System.out.println("Invalid input. Please enter a number.");
+                        scanner.nextLine();
+                    }
                     break;
                 case 9:
                     System.out.println("Setting Recurrence Pattern for Task...");
@@ -104,6 +122,64 @@ public class Main {
                 case 10:
                     System.out.println("Listing all Recurrence Patterns...");
                     // call method to list recurrence patterns
+                    break;
+                case 11:
+                    System.out.println("--- Import Tasks ---");
+                    System.out.print("Enter CSV file path (e.g., test_in.csv): ");
+                    String importPath = scanner.nextLine();
+                    try {
+                        csvController.importFromCSV(new File(importPath));
+                        System.out.println("Import successful! Use Option 4 to see them.");
+                    } catch (Exception e) {
+                        System.err.println("Import failed: " + e.getMessage());
+                    }
+                    break;
+                case 12:
+                    System.out.println("--- Export Tasks ---");
+                    System.out.print("Enter destination file name (e.g., my_export.csv): ");
+                    String exportPath = scanner.nextLine();
+                    try {
+                        CSVExporter exporter = new org.example.utils.CSVExporter();
+                        exporter.export(taskCat.getTasks(), exportPath);
+                        System.out.println("Export successful! Check your project folder.");
+                    } catch (Exception e) {
+                        System.err.println("Export failed: " + e.getMessage());
+                    }
+                    break;
+                case 13:
+                    System.out.println("\n--- Advanced Task Search ---");
+                    System.out.println("(Press ENTER to skip any filter)");
+
+                    System.out.print("Keyword (title/desc): ");
+                    String searchKeyword = scanner.nextLine();
+
+                    System.out.print("Status filter (todo, in_progress, blocked, done): ");
+                    String searchStatus = scanner.nextLine();
+
+                    //dynamic search
+                    List<org.example.models.Task> searchResults = taskCat.advancedSearch(searchKeyword, searchStatus);
+
+                    if (searchResults.isEmpty()) {
+                        System.out.println("No tasks found matching your criteria.");
+                    } else {
+                        System.out.println("\nFound " + searchResults.size() + " matching tasks:");
+                        for (org.example.models.Task t : searchResults) {
+                            System.out.println(" - [" + t.getStatus() + "] " + t.getTitle() + " | Due: " + t.getDueDate());
+                        }
+
+                        System.out.print("\nDo you want to export these results to CSV? (y/n): ");
+                        if (scanner.nextLine().trim().equalsIgnoreCase("y")) {
+                            System.out.print("Enter export file name (e.g., search_results.csv): ");
+                            String outPath = scanner.nextLine();
+                            try {
+                                org.example.utils.CSVExporter exp = new org.example.utils.CSVExporter();
+                                exp.export(searchResults, outPath);
+                                System.out.println("Search results exported successfully to " + outPath);
+                            } catch (Exception e) {
+                                System.err.println("Export failed: " + e.getMessage());
+                            }
+                        }
+                    }
                     break;
                 case 0:
                     System.out.println("Exiting... Goodbye!");

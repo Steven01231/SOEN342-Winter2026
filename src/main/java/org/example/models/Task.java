@@ -21,6 +21,10 @@ public class Task {
     private Date dueDate;
     private int projectId;
 
+    public Task() {
+        this.title = "default";
+    }
+
     public Task(String title, String description) {
         this.title = title;
         this.description = description;
