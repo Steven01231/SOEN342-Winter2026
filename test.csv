@@ -1,0 +1,17 @@
+TaskName,Description,Subtask,Status,Priority,DueDate,ProjectName,ProjectDescription,Collaborator,CollaboratorCategory
+Finish report,Complete the final report for submission,,OPEN,2,2026-03-18,ProjectPlaceholder,DescPlaceholder,CollabPlaceholder,CatPlaceholder
+Wash,All plates,,IN_PROGRESS,1,2026-03-19,ProjectPlaceholder,DescPlaceholder,CollabPlaceholder,CatPlaceholder
+Fix Login,Fix the auth bug,,OPEN,3,2026-05-01,ProjectPlaceholder,DescPlaceholder,CollabPlaceholder,CatPlaceholder
+Write Tests,Unit testing,,OPEN,2,2026-05-10,ProjectPlaceholder,DescPlaceholder,CollabPlaceholder,CatPlaceholder
+Update Server,Install latest security patches,,TODO,3,2026-03-25,ProjectPlaceholder,DescPlaceholder,CollabPlaceholder,CatPlaceholder
+Order Pizza,Lunch for the team meeting,,DONE,1,2026-03-19,ProjectPlaceholder,DescPlaceholder,CollabPlaceholder,CatPlaceholder
+Draft Pitch Deck,Create slides for investors,,IN_PROGRESS,2,2026-04-01,ProjectPlaceholder,DescPlaceholder,CollabPlaceholder,CatPlaceholder
+Fix CSS Bug,Button is misaligned on mobile,,TODO,2,2026-03-22,ProjectPlaceholder,DescPlaceholder,CollabPlaceholder,CatPlaceholder
+Audit Logs,Review Q1 access logs,,TODO,1,2026-03-30,ProjectPlaceholder,DescPlaceholder,CollabPlaceholder,CatPlaceholder
+Update Server,Install latest security patches,,TODO,3,2026-03-25,ProjectPlaceholder,DescPlaceholder,CollabPlaceholder,CatPlaceholder
+Order Pizza,Lunch for the team meeting,,DONE,1,2026-03-19,ProjectPlaceholder,DescPlaceholder,CollabPlaceholder,CatPlaceholder
+Draft Pitch Deck,Create slides for investors,,IN_PROGRESS,2,2026-04-01,ProjectPlaceholder,DescPlaceholder,CollabPlaceholder,CatPlaceholder
+Fix CSS Bug,Button is misaligned on mobile,,TODO,2,2026-03-22,ProjectPlaceholder,DescPlaceholder,CollabPlaceholder,CatPlaceholder
+Audit Logs,Review Q1 access logs,,TODO,1,2026-03-30,ProjectPlaceholder,DescPlaceholder,CollabPlaceholder,CatPlaceholder
+soen 342 lab,description,,OPEN,2,1969-12-31,ProjectPlaceholder,DescPlaceholder,CollabPlaceholder,CatPlaceholder
+go to the grocery store,description,,OPEN,1,,ProjectPlaceholder,DescPlaceholder,CollabPlaceholder,CatPlaceholder

@@ -85,7 +85,10 @@ public class TaskCatalog {
             pstmt.setInt(7, task.getProjectId());
 
             pstmt.executeUpdate();
+
+            this.tasks.add(task);
             System.out.println("Task inserted successfully!");
+
 
         } catch (SQLException e) {
             e.printStackTrace();
