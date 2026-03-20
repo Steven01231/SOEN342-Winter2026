@@ -102,7 +102,18 @@ public class Main {
                     break;
                 case 8:
                     System.out.println("\n--- View Task Activity History ---");
+                    List<Task> availableTasks = taskCat.getTasks();
+                    if (availableTasks.isEmpty()) {
+                        System.out.println("There are no tasks in the system yet.");
+                        break; // Exit this menu option early
+                    }
+                    System.out.println("Available Tasks:");
+                    for (org.example.models.Task t : availableTasks) {
+                        System.out.println("  [ID: " + t.getTaskId() + "] " + t.getTitle());
+                    }
+
                     System.out.print("Enter the Task ID you want to view: ");
+
                     try {
                         int historyTaskId = scanner.nextInt();
                         scanner.nextLine();
