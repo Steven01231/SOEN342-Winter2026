@@ -22,6 +22,7 @@ public class Main {
     static SubtaskCatalog subCat;
     static TagCatalog tagCat;
     static TaskCatalog taskCat;
+    static CollaboratorCatalog colCat;
 
     public static void main(String[] args) {
 
@@ -45,6 +46,7 @@ public class Main {
                 subCat = new SubtaskCatalog(conn);
                 tagCat = new TagCatalog(conn);
                 taskCat = new TaskCatalog(conn);
+                colCat = new CollaboratorCatalog(conn);
             }
         } catch (SQLException e) {
             System.err.println("Connection failed: " + e.getMessage());
@@ -65,6 +67,8 @@ public class Main {
             System.out.println("11. Import Tasks from CSV");
             System.out.println("12. Export All Tasks to CSV");
             System.out.println("13. Search Tasks (Keyword)");
+            System.out.println("14. Update Task");
+            System.out.println("15. Manage Collaborators");
             System.out.println("0. Exit");
             System.out.print("Select an option: ");
 
@@ -179,6 +183,169 @@ public class Main {
                                 System.err.println("Export failed: " + e.getMessage());
                             }
                         }
+                    }
+                    break;
+                case 14:
+                    System.out.println("\n--- Update Task ---");
+                    System.out.print("Enter Task ID to update: ");
+                    try {
+                        int updateTaskId = scanner.nextInt();
+                        scanner.nextLine();
+
+                        System.out.println("What would you like to update?");
+                        System.out.println("  1. Update Status");
+                        System.out.println("  2. Update Due Date");
+                        System.out.println("  3. Assign Collaborator");
+                        System.out.println("  4. Update Collaborator Subtask Status (progress)");
+                        System.out.print("Select sub-option: ");
+                        int updateChoice = scanner.nextInt();
+                        scanner.nextLine();
+
+                        switch (updateChoice) {
+                            case 1:
+                                System.out.print("New status (todo, in_progress, blocked, done): ");
+                                String newStatus = scanner.nextLine();
+                                tc.updateTaskStatus(conn, updateTaskId, newStatus);
+                                break;
+                            case 2:
+                                System.out.print("New due date in days from today (integer): ");
+                                try {
+                                    int days = Integer.parseInt(scanner.nextLine().trim());
+                                    java.util.Date newDue = new java.util.Date(System.currentTimeMillis() + days * 24L * 60 * 60 * 1000);
+                                    tc.updateTaskDueDate(conn, updateTaskId, newDue);
+                                } catch (NumberFormatException e) {
+                                    System.out.println("Invalid input. Due date not updated.");
+                                }
+                                break;
+                            case 3:
+                                System.out.println("Available collaborators:");
+                                if (colCat.getCollaborators().isEmpty()) {
+                                    System.out.println("  (none — use option 15 to create one first)");
+                                } else {
+                                    for (org.example.models.Collaborator c : colCat.getCollaborators()) {
+                                        int open = colCat.countOpenTasks(c.getId());
+                                        System.out.println("  ID: " + c.getId()
+                                            + " | Category: " + c.getCategory()
+                                            + " | Open tasks: " + open + "/" + c.getTaskLimit()
+                                            + " | Project ID: " + c.getProjectId());
+                                    }
+                                }
+                                System.out.print("Enter Collaborator ID: ");
+                                try {
+                                    int collabId = scanner.nextInt();
+                                    scanner.nextLine();
+                                    System.out.print("Enter Subtask Title: ");
+                                    String subtaskTitle = scanner.nextLine();
+                                    org.example.models.Subtask created = colCat.assignTaskToCollaborator(updateTaskId, collabId, subtaskTitle);
+                                    if (created != null) {
+                                        subCat.getSubtasks().add(created); // keep in-memory list in sync
+                                    }
+                                } catch (java.util.InputMismatchException e) {
+                                    System.out.println("Invalid input.");
+                                    scanner.nextLine();
+                                } catch (IllegalStateException | IllegalArgumentException e) {
+                                    System.err.println("Assignment failed: " + e.getMessage());
+                                }
+                                break;
+                            case 4:
+                                // Completing a subtask reports progress only — parent task status unchanged
+                                System.out.println("Subtasks for task " + updateTaskId + ":");
+                                boolean found = false;
+                                for (org.example.models.Subtask s : subCat.getSubtasks()) {
+                                    if (s.getTaskId() == updateTaskId) {
+                                        System.out.println("  Subtask ID: " + s.getId()
+                                            + " | Title: " + s.getTitle()
+                                            + " | Status: " + s.getStatus()
+                                            + " | Collaborator ID: " + s.getCollaboratorId());
+                                        found = true;
+                                    }
+                                }
+                                if (!found) {
+                                    System.out.println("  No subtasks found for this task.");
+                                    break;
+                                }
+                                System.out.print("Enter Subtask ID to update: ");
+                                try {
+                                    int subtaskId = scanner.nextInt();
+                                    scanner.nextLine();
+                                    System.out.print("New status (todo, in_progress, blocked, done): ");
+                                    String subtaskStatus = scanner.nextLine();
+                                    subCat.updateSubtaskStatus(subtaskId, subtaskStatus);
+                                } catch (java.util.InputMismatchException e) {
+                                    System.out.println("Invalid input.");
+                                    scanner.nextLine();
+                                }
+                                break;
+                            default:
+                                System.out.println("Invalid sub-option.");
+                        }
+                    } catch (java.util.InputMismatchException e) {
+                        System.out.println("Invalid input. Please enter a number.");
+                        scanner.nextLine();
+                    }
+                    break;
+                case 15:
+                    System.out.println("\n--- Manage Collaborators ---");
+                    System.out.println("  1. Create a Collaborator");
+                    System.out.println("  2. Update Collaborator Task Limit");
+                    System.out.println("  3. List Collaborators");
+                    System.out.print("Select sub-option: ");
+                    try {
+                        int collabChoice = scanner.nextInt();
+                        scanner.nextLine();
+                        switch (collabChoice) {
+                            case 1:
+                                System.out.print("Category (Senior / Intermediate / Junior): ");
+                                String category = scanner.nextLine().trim();
+                                System.out.print("Project ID: ");
+                                int projectId = scanner.nextInt();
+                                scanner.nextLine();
+                                int newCollabId = colCat.createCollaborator(category, projectId);
+                                if (newCollabId != -1) {
+                                    System.out.println("Collaborator created with ID: " + newCollabId
+                                        + " | Category: " + category);
+                                }
+                                break;
+                            case 2:
+                                // Limit can be changed even when collaborator has assigned tasks
+                                System.out.println("Current collaborators:");
+                                for (org.example.models.Collaborator c : colCat.getCollaborators()) {
+                                    int open = colCat.countOpenTasks(c.getId());
+                                    System.out.println("  ID: " + c.getId()
+                                        + " | Category: " + c.getCategory()
+                                        + " | Limit: " + c.getTaskLimit()
+                                        + " | Open tasks: " + open
+                                        + " | Project ID: " + c.getProjectId());
+                                }
+                                System.out.print("Enter Collaborator ID: ");
+                                int limitCollabId = scanner.nextInt();
+                                scanner.nextLine();
+                                System.out.print("New task limit (integer): ");
+                                int newLimit = scanner.nextInt();
+                                scanner.nextLine();
+                                colCat.updateTaskLimit(limitCollabId, newLimit);
+                                break;
+                            case 3:
+                                if (colCat.getCollaborators().isEmpty()) {
+                                    System.out.println("No collaborators found.");
+                                } else {
+                                    for (org.example.models.Collaborator c : colCat.getCollaborators()) {
+                                        int open = colCat.countOpenTasks(c.getId());
+                                        System.out.println("  ID: " + c.getId()
+                                            + " | Category: " + c.getCategory()
+                                            + " | Open tasks: " + open + "/" + c.getTaskLimit()
+                                            + " | Project ID: " + c.getProjectId());
+                                    }
+                                }
+                                break;
+                            default:
+                                System.out.println("Invalid sub-option.");
+                        }
+                    } catch (java.util.InputMismatchException e) {
+                        System.out.println("Invalid input.");
+                        scanner.nextLine();
+                    } catch (IllegalArgumentException e) {
+                        System.err.println("Error: " + e.getMessage());
                     }
                     break;
                 case 0:

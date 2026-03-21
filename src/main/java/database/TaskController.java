@@ -114,7 +114,7 @@ public class TaskController{
 
 
     public void insertTask(Connection conn, String title, String description) {
-        String sqlInsert = "INSERT INTO tasks (title, description) VALUES (?, ?)";
+        String sqlInsert = "INSERT INTO task (title, description) VALUES (?, ?)";
 
         try (// Assuming you have a connection method
              PreparedStatement pstmt = conn.prepareStatement(sqlInsert)) {
@@ -127,6 +127,38 @@ public class TaskController{
 
         } catch (SQLException e) {
             System.out.println("Error inserting task: " + e.getMessage());
+        }
+    }
+
+    public void updateTaskDueDate(Connection conn, int taskId, java.util.Date newDueDate) {
+        String query = "UPDATE task SET due_date = ? WHERE id = ?";
+        try (PreparedStatement ps = conn.prepareStatement(query)) {
+            ps.setLong(1, newDueDate.getTime());
+            ps.setInt(2, taskId);
+            int rows = ps.executeUpdate();
+            if (rows > 0) {
+                System.out.println("Task " + taskId + " due date updated to " + newDueDate + ".");
+            } else {
+                System.out.println("No task found with ID " + taskId + ".");
+            }
+        } catch (SQLException e) {
+            System.err.println("Error updating due date: " + e.getMessage());
+        }
+    }
+
+    public void updateTaskStatus(Connection conn, int taskId, String newStatus) {
+        String query = "UPDATE task SET status = ? WHERE id = ?";
+        try (PreparedStatement ps = conn.prepareStatement(query)) {
+            ps.setString(1, newStatus.trim().toLowerCase());
+            ps.setInt(2, taskId);
+            int rows = ps.executeUpdate();
+            if (rows > 0) {
+                System.out.println("Task " + taskId + " status updated to '" + newStatus.trim().toLowerCase() + "'.");
+            } else {
+                System.out.println("No task found with ID " + taskId + ".");
+            }
+        } catch (SQLException e) {
+            System.err.println("Error updating task: " + e.getMessage());
         }
     }
 
