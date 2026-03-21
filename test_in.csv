@@ -1,6 +1,6 @@
 TaskName,Description,Subtask,Status,Priority,DueDate,ProjectName,ProjectDescription,Collaborator,CollaboratorCategory
-Update Server,Install latest security patches,,todo,3,2026-03-25,Infrastructure,IT Operations,Bob,SENIOR
-Order Pizza,Lunch for the team meeting,,done,1,2026-03-19,Office Admin,General office tasks,Alice,JUNIOR
-Draft Pitch Deck,Create slides for investors,,in_progress,2,2026-04-01,Fundraising,Series A prep,Charlie,INTERMEDIATE
-Fix CSS Bug,Button is misaligned on mobile,,todo,2,2026-03-22,Website Redesign,Marketing site overhaul,Diana,INTERMEDIATE
-Audit Logs,Review Q1 access logs,,todo,1,2026-03-30,Infrastructure,IT Operations,Eve,SENIOR
+Design Homepage,Create mockups in Figma,UI Layout,in_progress,2,2026-04-10,Website Overhaul,Redesigning the main landing page,Alex,Senior
+Develop Footer,Code the footer section,HTML/CSS,todo,1,2026-04-15,Website Overhaul,Redesigning the main landing page,Sam,Junior
+Setup Database,Configure SQLite schema,Table Creation,todo,3,2026-03-25,Backend Migration,Moving from local to cloud storage,Alex,Senior
+API Integration,Connect frontend to backend,,todo,2,2026-04-05,Backend Migration,Moving from local to cloud storage,Jordan,Intermediate
+Write Documentation,User guide for the app,,done,1,2026-03-15,Internal Docs,Product documentation,Pat,Junior

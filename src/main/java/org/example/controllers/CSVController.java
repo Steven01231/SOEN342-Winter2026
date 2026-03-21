@@ -83,7 +83,9 @@ public class CSVController {
     }
 
     private int handleProjectAutoCreation(String name, String description) {
-        if (name == null || name.trim().isEmpty()) return -1;
+        if (name == null || name.trim().isEmpty()) {
+            return 0; // 0 represents 'No Project'
+        }
 
         int existingId = projectCatalog.findIdByName(name);
 
