@@ -29,6 +29,7 @@ public class TaskController{
         stmt.execute(
                 "CREATE TABLE IF NOT EXISTS collaborator (" +
                         "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                        "name TEXT NOT NULL, " +
                         "category TEXT, " +
                         "task_limit INTEGER, " +
                         "project_id INTEGER, " +
