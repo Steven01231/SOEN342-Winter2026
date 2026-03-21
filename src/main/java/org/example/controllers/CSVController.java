@@ -1,6 +1,8 @@
 package org.example.controllers;
 
+import catalogs.CollaboratorCatalog;
 import org.example.dto.TaskDTO;
+import org.example.models.Collaborator;
 import org.example.models.Task;
 import org.example.utils.CSVParser;
 import org.example.utils.CSVExporter;
@@ -14,12 +16,14 @@ public class CSVController {
     private final CSVExporter exporter;
     private final ProjectCatalog projectCatalog;
     private final TaskCatalog taskCatalog;
+    private final CollaboratorCatalog collaboratorCatalog;
 
-    public CSVController(ProjectCatalog proCat, TaskCatalog taskCat) {
+    public CSVController(ProjectCatalog proCat, TaskCatalog taskCat, CollaboratorCatalog collabCat) {
         this.parser = new CSVParser();
-        this.exporter = new CSVExporter();
         this.projectCatalog = proCat;
         this.taskCatalog = taskCat;
+        this.collaboratorCatalog = collabCat;
+        this.exporter = new CSVExporter(proCat, collabCat);
     }
 
     public void importFromCSV(File file) throws Exception {
@@ -53,17 +57,28 @@ public class CSVController {
                 try {
                     newTask.setDueDate(dateFormat.parse(dto.dueDate.trim()));
                 } catch (java.text.ParseException e) {
-                    System.err.println("Invalid date format for task: " + dto.taskName + ". Leaving due date empty.");
+                    System.err.println("Invalid date format for task: " + dto.getTaskName());
                 }
             }
 
             newTask.setCreationDate(new java.util.Date());
-
-            // 5. Hand it off to Steven's database method!
             taskCatalog.addTask(newTask);
 
-            // Add to his local list so it stays in sync
-            taskCatalog.getTasks().add(newTask);
+            if (dto.getCollaboratorName() != null && !dto.getCollaboratorName().trim().isEmpty()) {
+                int collabId = handleCollaboratorAutoCreation(
+                        dto.getCollaboratorName(),
+                        dto.getCollaboratorCategory(),
+                        projectId
+                );
+
+                if (collabId != -1) {
+                    String subTitle = (dto.getSubtaskTitle() != null && !dto.getSubtaskTitle().isEmpty())
+                            ? dto.getSubtaskTitle()
+                            : "Main Responsibility";
+
+                    collaboratorCatalog.assignTaskToCollaborator(newTask.getTaskId(), collabId, subTitle);
+                }
+            }
         }
     }
 
@@ -78,5 +93,15 @@ public class CSVController {
             System.out.println("Auto-creating missing project: " + name);
             return projectCatalog.createProject(name, description);
         }
+    }
+    private int handleCollaboratorAutoCreation(String name, String category, int projectId) {
+        // Look for existing collaborator with this name in this specific project
+        for (Collaborator c : collaboratorCatalog.getCollaborators()) {
+            if (c.getName().equalsIgnoreCase(name) && c.getProjectId() == projectId) {
+                return c.getId();
+            }
+        }
+        System.out.println("Auto-creating missing collaborator: " + name);
+        return collaboratorCatalog.createCollaborator(name, category, projectId);
     }
 }

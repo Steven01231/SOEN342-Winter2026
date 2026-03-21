@@ -46,20 +46,24 @@ public class CSVExporter {
                 break;
             }
         }
+
+        String subtaskTitles = collaboratorCatalog.getSubtaskTitlesForTask(t.getTaskId());
+
         String collabName = "";
         String collabCat = "";
 
-        for (Collaborator c : collaboratorCatalog.getCollaborators()) {
-            if (c.getProjectId() == t.getProjectId()) {
-                collabCat = c.getCategory();
-                collabName = c.getName();
-                break;
-            }
+        Collaborator assignedCollab = collaboratorCatalog.getCollaboratorForTask(t.getTaskId());
+
+        if (assignedCollab != null) {
+            collabName = assignedCollab.getName() != null ? assignedCollab.getName() : "";
+            collabCat = assignedCollab.getCategory() != null ? assignedCollab.getCategory() : "";
         }
+
+
         return new String[] {
                 t.getTitle() != null ? t.getTitle() : "",
                 t.getDescription() != null ? t.getDescription() : "",
-                "", //loop if subtask
+                subtaskTitles,
                 t.getStatus() != null ? t.getStatus().toString() : "OPEN",
                 String.valueOf(t.getPriorityLevel()),
                 t.getDueDate() != null ? t.getDueDate().toString() : "",

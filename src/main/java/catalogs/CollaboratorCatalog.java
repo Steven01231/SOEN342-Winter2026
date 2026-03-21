@@ -9,6 +9,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.List;
 
 public class CollaboratorCatalog {
     private ArrayList<Collaborator> collaborators;
@@ -181,5 +182,40 @@ public class CollaboratorCatalog {
             e.printStackTrace();
         }
         return -1;
+    }
+
+    /**
+     * Fetches all subtask titles for a given task.
+     */
+    public String getSubtaskTitlesForTask(int taskId) {
+        List<String> titles = new ArrayList<>();
+        String sql = "SELECT title FROM subtask WHERE task_id = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, taskId);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                titles.add(rs.getString("title"));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return String.join("; ", titles);
+    }
+
+    /**
+     * Finds the first collaborator assigned to a specific task.
+     */
+    public Collaborator getCollaboratorForTask(int taskId) {
+        String sql = "SELECT collaborator_id FROM subtask WHERE task_id = ? LIMIT 1";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, taskId);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return getCollaboratorById(rs.getInt("collaborator_id"));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 }
