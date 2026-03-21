@@ -271,6 +271,26 @@ public class Main {
                                     System.out.print("New status (todo, in_progress, blocked, done): ");
                                     String subtaskStatus = scanner.nextLine();
                                     subCat.updateSubtaskStatus(subtaskId, subtaskStatus);
+                                    // warn if reopening causes collaborator overload
+                                    if (!subtaskStatus.trim().equalsIgnoreCase("done")) {
+                                        for (org.example.models.Subtask s : subCat.getSubtasks()) {
+                                            if (s.getId() == subtaskId) {
+                                                org.example.models.Collaborator c = colCat.getCollaboratorById(s.getCollaboratorId());
+                                                if (c != null) {
+                                                    int openCount = colCat.countOpenTasks(c.getId());
+                                                    int liveLimit = colCat.getTaskLimitFromDB(c.getId());
+                                                    if (openCount > liveLimit) {
+                                                        System.out.println("WARNING: Collaborator (id=" + c.getId()
+                                                            + ", category=" + c.getCategory()
+                                                            + ") is now overloaded — "
+                                                            + openCount + " open task(s) exceed their limit of "
+                                                            + liveLimit + ".");
+                                                    }
+                                                }
+                                                break;
+                                            }
+                                        }
+                                    }
                                 } catch (java.util.InputMismatchException e) {
                                     System.out.println("Invalid input.");
                                     scanner.nextLine();

@@ -106,6 +106,21 @@ public class CollaboratorCatalog {
     }
 
     /**
+     * Reads the task_limit directly from DB — always up to date regardless of in-memory state.
+     */
+    public int getTaskLimitFromDB(int collaboratorId) {
+        String query = "SELECT task_limit FROM collaborator WHERE id = ?";
+        try (PreparedStatement ps = conn.prepareStatement(query)) {
+            ps.setInt(1, collaboratorId);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) return rs.getInt(1);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    /**
      * Updates the task_limit of an existing collaborator.
      * Allowed even when the collaborator already has assigned tasks — the collaborator
      * may become overloaded if the new limit is lower than their current open-task count.
