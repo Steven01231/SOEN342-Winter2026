@@ -94,6 +94,7 @@ public class TaskCatalog {
             tasks.add(task);
             System.out.println("Task inserted successfully with ID " + task.getTaskId() + "!");
 
+
         } catch (SQLException e) {
             e.printStackTrace();
         }
