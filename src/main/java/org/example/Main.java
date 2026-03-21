@@ -66,9 +66,10 @@ public class Main {
             System.out.println("10. List Recurrence Patterns");
             System.out.println("11. Import Tasks from CSV");
             System.out.println("12. Export All Tasks to CSV");
-            System.out.println("13. Search Tasks (Keyword)");
+            System.out.println("13. Search Tasks");
             System.out.println("14. Update Task");
             System.out.println("15. Manage Collaborators");
+            System.out.println("16. Manage Tags");
             System.out.println("0. Exit");
             System.out.print("Select an option: ");
 
@@ -269,38 +270,119 @@ public class Main {
                     }
                     break;
                 case 13:
-                    System.out.println("\n--- Advanced Task Search ---");
-                    System.out.println("(Press ENTER to skip any filter)");
+                    System.out.println("\n--- Search Tasks ---");
+                    System.out.println("  1. By keyword (title / description)");
+                    System.out.println("  2. By tag");
+                    System.out.println("  3. By status");
+                    System.out.println("  4. By date range (period)");
+                    System.out.println("  5. By day of week");
+                    System.out.println("  6. All open tasks (no filter)");
+                    System.out.print("Select sub-option: ");
+                    try {
+                        int searchChoice = Integer.parseInt(scanner.nextLine().trim());
+                        List<org.example.models.Task> searchResults = new java.util.ArrayList<>();
 
-                    System.out.print("Keyword (title/desc): ");
-                    String searchKeyword = scanner.nextLine();
-
-                    System.out.print("Status filter (todo, in_progress, blocked, done): ");
-                    String searchStatus = scanner.nextLine();
-
-                    //dynamic search
-                    List<org.example.models.Task> searchResults = taskCat.advancedSearch(searchKeyword, searchStatus);
-
-                    if (searchResults.isEmpty()) {
-                        System.out.println("No tasks found matching your criteria.");
-                    } else {
-                        System.out.println("\nFound " + searchResults.size() + " matching tasks:");
-                        for (org.example.models.Task t : searchResults) {
-                            System.out.println(" - [" + t.getStatus() + "] " + t.getTitle() + " | Due: " + t.getDueDate());
+                        switch (searchChoice) {
+                            case 1:
+                                System.out.print("Keyword (title/description): ");
+                                String searchKeyword = scanner.nextLine().trim();
+                                if (searchKeyword.isEmpty()) {
+                                    System.out.println("Keyword cannot be empty.");
+                                    break;
+                                }
+                                searchResults = taskCat.advancedSearch(searchKeyword, null);
+                                break;
+                            case 2:
+                                System.out.print("Tag keyword: ");
+                                String tagKeyword = scanner.nextLine().trim();
+                                if (tagKeyword.isEmpty()) {
+                                    System.out.println("Tag keyword cannot be empty.");
+                                    break;
+                                }
+                                searchResults = tagCat.getTasksByTag(tagKeyword);
+                                break;
+                            case 3:
+                                System.out.print("Status (todo / in_progress / blocked / done): ");
+                                String searchStatus = scanner.nextLine().trim();
+                                if (searchStatus.isEmpty()) {
+                                    System.out.println("Status cannot be empty.");
+                                    break;
+                                }
+                                searchResults = taskCat.advancedSearch(null, searchStatus);
+                                break;
+                            case 4:
+                                java.text.SimpleDateFormat rangeSdf = new java.text.SimpleDateFormat("yyyy-MM-dd");
+                                try {
+                                    System.out.print("From date (yyyy-MM-dd): ");
+                                    java.util.Date rangeFrom = rangeSdf.parse(scanner.nextLine().trim());
+                                    System.out.print("To date   (yyyy-MM-dd): ");
+                                    java.util.Date rangeTo = rangeSdf.parse(scanner.nextLine().trim());
+                                    // set rangeTo to end of day so the upper bound is inclusive
+                                    java.util.Calendar cal = java.util.Calendar.getInstance();
+                                    cal.setTime(rangeTo);
+                                    cal.set(java.util.Calendar.HOUR_OF_DAY, 23);
+                                    cal.set(java.util.Calendar.MINUTE, 59);
+                                    cal.set(java.util.Calendar.SECOND, 59);
+                                    rangeTo = cal.getTime();
+                                    if (rangeFrom.after(rangeTo)) {
+                                        System.out.println("From date must be before or equal to To date.");
+                                        break;
+                                    }
+                                    searchResults = taskCat.searchByDateRange(rangeFrom, rangeTo);
+                                } catch (java.text.ParseException e) {
+                                    System.out.println("Invalid date format. Use yyyy-MM-dd.");
+                                }
+                                break;
+                            case 5:
+                                System.out.print("Day of week (Mon / Tue / Wed / Thu / Fri / Sat / Sun): ");
+                                String dayInput = scanner.nextLine().trim().toLowerCase();
+                                int dayOfWeek = -1;
+                                switch (dayInput) {
+                                    case "sun": case "sunday":    dayOfWeek = 0; break;
+                                    case "mon": case "monday":    dayOfWeek = 1; break;
+                                    case "tue": case "tuesday":   dayOfWeek = 2; break;
+                                    case "wed": case "wednesday": dayOfWeek = 3; break;
+                                    case "thu": case "thursday":  dayOfWeek = 4; break;
+                                    case "fri": case "friday":    dayOfWeek = 5; break;
+                                    case "sat": case "saturday":  dayOfWeek = 6; break;
+                                    default: System.out.println("Unrecognised day. Use e.g. Mon, Tue, Wed.");
+                                }
+                                if (dayOfWeek != -1) {
+                                    searchResults = taskCat.searchByDayOfWeek(dayOfWeek);
+                                }
+                                break;
+                            case 6:
+                                searchResults = taskCat.advancedSearch(null, null);
+                                break;
+                            default:
+                                System.out.println("Invalid sub-option.");
                         }
 
-                        System.out.print("\nDo you want to export these results to CSV? (y/n): ");
-                        if (scanner.nextLine().trim().equalsIgnoreCase("y")) {
-                            System.out.print("Enter export file name (e.g., search_results.csv): ");
-                            String outPath = scanner.nextLine();
-                            try {
-                                org.example.utils.CSVExporter exp = new org.example.utils.CSVExporter();
-                                exp.export(searchResults, outPath);
-                                System.out.println("Search results exported successfully to " + outPath);
-                            } catch (Exception e) {
-                                System.err.println("Export failed: " + e.getMessage());
+                        if (!searchResults.isEmpty()) {
+                            java.text.SimpleDateFormat dispFmt = new java.text.SimpleDateFormat("yyyy-MM-dd");
+                            System.out.println("\nFound " + searchResults.size() + " task(s):");
+                            for (org.example.models.Task t : searchResults) {
+                                String due = t.getDueDate() != null ? dispFmt.format(t.getDueDate()) : "no due date";
+                                System.out.println("  ID: " + t.getTaskId()
+                                        + " | [" + t.getStatus() + "] " + t.getTitle()
+                                        + " | Due: " + due);
                             }
+                            System.out.print("\nExport results to CSV? (y/n): ");
+                            if (scanner.nextLine().trim().equalsIgnoreCase("y")) {
+                                System.out.print("File name (e.g. results.csv): ");
+                                String outPath = scanner.nextLine().trim();
+                                try {
+                                    new org.example.utils.CSVExporter().export(searchResults, outPath);
+                                    System.out.println("Exported to " + outPath);
+                                } catch (Exception e) {
+                                    System.err.println("Export failed: " + e.getMessage());
+                                }
+                            }
+                        } else if (searchResults != null) {
+                            System.out.println("No tasks found matching your criteria.");
                         }
+                    } catch (NumberFormatException e) {
+                        System.out.println("Invalid input. Please enter a number.");
                     }
                     break;
                 case 14:
@@ -484,6 +566,107 @@ public class Main {
                         scanner.nextLine();
                     } catch (IllegalArgumentException e) {
                         System.err.println("Error: " + e.getMessage());
+                    }
+                    break;
+                case 16:
+                    System.out.println("\n--- Manage Tags ---");
+                    System.out.println("  1. Create a Tag");
+                    System.out.println("  2. Add Tag to Task");
+                    System.out.println("  3. Remove Tag from Task");
+                    System.out.println("  4. List all Tags");
+                    System.out.println("  5. View Tags on a Task");
+                    System.out.println("  6. Search Tasks by Tag");
+                    System.out.print("Select sub-option: ");
+                    try {
+                        int tagChoice = Integer.parseInt(scanner.nextLine().trim());
+                        switch (tagChoice) {
+                            case 1:
+                                System.out.print("Tag keyword: ");
+                                String newKeyword = scanner.nextLine().trim();
+                                if (newKeyword.isEmpty()) {
+                                    System.out.println("Keyword cannot be empty.");
+                                } else {
+                                    tagCat.createTag(newKeyword);
+                                }
+                                break;
+                            case 2:
+                                if (tagCat.getTags().isEmpty()) {
+                                    System.out.println("No tags exist yet. Create one first (sub-option 1).");
+                                    break;
+                                }
+                                System.out.println("Available tags:");
+                                for (org.example.models.Tag tg : tagCat.getTags()) {
+                                    System.out.println("  ID: " + tg.getId() + " | " + tg.getKeyword());
+                                }
+                                System.out.print("Enter Task ID: ");
+                                int tagTaskId = Integer.parseInt(scanner.nextLine().trim());
+                                System.out.print("Enter Tag ID: ");
+                                int addTagId = Integer.parseInt(scanner.nextLine().trim());
+                                tagCat.addTagToTask(tagTaskId, addTagId);
+                                break;
+                            case 3:
+                                System.out.print("Enter Task ID: ");
+                                int removeTaskId = Integer.parseInt(scanner.nextLine().trim());
+                                List<org.example.models.Tag> taskTags = tagCat.getTagsForTask(removeTaskId);
+                                if (taskTags.isEmpty()) {
+                                    System.out.println("No tags linked to task " + removeTaskId + ".");
+                                    break;
+                                }
+                                System.out.println("Tags on task " + removeTaskId + ":");
+                                for (org.example.models.Tag tg : taskTags) {
+                                    System.out.println("  ID: " + tg.getId() + " | " + tg.getKeyword());
+                                }
+                                System.out.print("Enter Tag ID to remove: ");
+                                int removeTagId = Integer.parseInt(scanner.nextLine().trim());
+                                tagCat.removeTagFromTask(removeTaskId, removeTagId);
+                                break;
+                            case 4:
+                                if (tagCat.getTags().isEmpty()) {
+                                    System.out.println("No tags defined yet.");
+                                } else {
+                                    System.out.println("All tags:");
+                                    for (org.example.models.Tag tg : tagCat.getTags()) {
+                                        System.out.println("  ID: " + tg.getId() + " | " + tg.getKeyword());
+                                    }
+                                }
+                                break;
+                            case 5:
+                                System.out.print("Enter Task ID: ");
+                                int viewTaskId = Integer.parseInt(scanner.nextLine().trim());
+                                List<org.example.models.Tag> viewTags = tagCat.getTagsForTask(viewTaskId);
+                                if (viewTags.isEmpty()) {
+                                    System.out.println("No tags linked to task " + viewTaskId + ".");
+                                } else {
+                                    System.out.println("Tags on task " + viewTaskId + ":");
+                                    for (org.example.models.Tag tg : viewTags) {
+                                        System.out.println("  ID: " + tg.getId() + " | " + tg.getKeyword());
+                                    }
+                                }
+                                break;
+                            case 6:
+                                System.out.print("Enter tag keyword to search: ");
+                                String searchTag = scanner.nextLine().trim();
+                                if (searchTag.isEmpty()) {
+                                    System.out.println("Keyword cannot be empty.");
+                                    break;
+                                }
+                                List<org.example.models.Task> tagResults = tagCat.getTasksByTag(searchTag);
+                                if (tagResults.isEmpty()) {
+                                    System.out.println("No tasks found with tag '" + searchTag + "'.");
+                                } else {
+                                    System.out.println("Tasks tagged '" + searchTag + "' (" + tagResults.size() + " found):");
+                                    for (org.example.models.Task t : tagResults) {
+                                        System.out.println("  ID: " + t.getTaskId()
+                                                + " | [" + t.getStatus() + "] " + t.getTitle()
+                                                + " | Due: " + t.getDueDate());
+                                    }
+                                }
+                                break;
+                            default:
+                                System.out.println("Invalid sub-option.");
+                        }
+                    } catch (NumberFormatException e) {
+                        System.out.println("Invalid input. Please enter a number.");
                     }
                     break;
                 case 0:
