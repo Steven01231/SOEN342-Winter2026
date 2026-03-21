@@ -1,4 +1,5 @@
 package org.example;
+import catalogs.CollaboratorCatalog;
 import org.example.controllers.CSVController;
 import catalogs.ProjectCatalog;
 import catalogs.TaskCatalog;
@@ -15,8 +16,9 @@ public class TestCSVController {
         try (Connection conn = DriverManager.getConnection(url)) {
             ProjectCatalog proCat = new ProjectCatalog(conn);
             TaskCatalog taskCat = new TaskCatalog(conn);
+            CollaboratorCatalog colCat = new CollaboratorCatalog(conn);
 
-            CSVController controller = new CSVController(proCat, taskCat);
+            CSVController controller = new CSVController(proCat, taskCat, colCat);
 
             File testFile = new File("test_in.csv");
             if (!testFile.exists()) {

@@ -8,6 +8,9 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.example.Main.colCat;
+import static org.example.Main.proCat;
+
 public class TestUtilities {
     public static void main(String[] args) {
         try {
@@ -25,7 +28,7 @@ public class TestUtilities {
 
             // --- TEST 2: EXPORTER ---
             System.out.println("\n--- Testing CSV Exporter ---");
-            CSVExporter exporter = new CSVExporter();
+            CSVExporter exporter = new CSVExporter(proCat, colCat);
 
             Task dummyTask = new Task();
             dummyTask.setTitle("Export Test");

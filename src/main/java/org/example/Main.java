@@ -32,7 +32,6 @@ public class Main {
 
         Scanner scanner = new Scanner(System.in);
         boolean exit = false;
-        CSVController csvController = new CSVController(proCat, taskCat);
 
         try {
             conn = DriverManager.getConnection(url);
@@ -51,6 +50,7 @@ public class Main {
         } catch (SQLException e) {
             System.err.println("Connection failed: " + e.getMessage());
         }
+        CSVController csvController = new CSVController(proCat, taskCat, colCat);
 
         while (!exit) {
             System.out.println("\n===== Task Organizer Menu =====");
@@ -273,7 +273,7 @@ public class Main {
                     System.out.print("Enter destination file name (e.g., my_export.csv): ");
                     String exportPath = scanner.nextLine();
                     try {
-                        CSVExporter exporter = new org.example.utils.CSVExporter();
+                        CSVExporter exporter = new org.example.utils.CSVExporter(proCat, colCat);
                         exporter.export(taskCat.getTasks(), exportPath);
                         System.out.println("Export successful! Check your project folder.");
                     } catch (Exception e) {
@@ -383,7 +383,7 @@ public class Main {
                                 System.out.print("File name (e.g. results.csv): ");
                                 String outPath = scanner.nextLine().trim();
                                 try {
-                                    new org.example.utils.CSVExporter().export(searchResults, outPath);
+                                    new org.example.utils.CSVExporter(proCat, colCat).export(searchResults, outPath);
                                     System.out.println("Exported to " + outPath);
                                 } catch (Exception e) {
                                     System.err.println("Export failed: " + e.getMessage());
@@ -526,12 +526,14 @@ public class Main {
                         scanner.nextLine();
                         switch (collabChoice) {
                             case 1:
+                                System.out.print("Enter Collaborator Name: ");
+                                String collabName = scanner.nextLine();
                                 System.out.print("Category (Senior / Intermediate / Junior): ");
                                 String category = scanner.nextLine().trim();
                                 System.out.print("Project ID: ");
                                 int projectId = scanner.nextInt();
                                 scanner.nextLine();
-                                int newCollabId = colCat.createCollaborator(category, projectId);
+                                int newCollabId = colCat.createCollaborator(collabName, category, projectId);
                                 if (newCollabId != -1) {
                                     System.out.println("Collaborator created with ID: " + newCollabId
                                         + " | Category: " + category);

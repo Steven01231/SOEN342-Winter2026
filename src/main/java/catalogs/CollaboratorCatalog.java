@@ -9,6 +9,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.List;
 
 public class CollaboratorCatalog {
     private ArrayList<Collaborator> collaborators;
@@ -26,6 +27,7 @@ public class CollaboratorCatalog {
             while (rs.next()) {
                 Collaborator collaborator = new Collaborator(
                         rs.getInt("id"),
+                        rs.getString("name"),
                         rs.getString("category"),
                         rs.getInt("task_limit"),
                         rs.getInt("project_id")
@@ -151,7 +153,7 @@ public class CollaboratorCatalog {
      * Creates a new collaborator under the given project.
      * Category must be "Senior" (limit 2), "Intermediate" (limit 5), or "Junior" (limit 10).
      */
-    public int createCollaborator(String category, int projectId) {
+    public int createCollaborator(String name, String category, int projectId) {
         int limit;
         switch (category.toLowerCase()) {
             case "senior":       limit = 2;  break;
@@ -163,21 +165,57 @@ public class CollaboratorCatalog {
                 );
         }
 
-        String insert = "INSERT INTO collaborator (category, task_limit, project_id) VALUES (?, ?, ?)";
+        String insert = "INSERT INTO collaborator (name, category, task_limit, project_id) VALUES (?, ?, ?, ?)";
         try (PreparedStatement ps = conn.prepareStatement(insert, Statement.RETURN_GENERATED_KEYS)) {
-            ps.setString(1, category);
-            ps.setInt(2, limit);
-            ps.setInt(3, projectId);
+            ps.setString(1, name);
+            ps.setString(2, category);
+            ps.setInt(3, limit);
+            ps.setInt(4, projectId);
             ps.executeUpdate();
             ResultSet keys = ps.getGeneratedKeys();
             if (keys.next()) {
                 int newId = keys.getInt(1);
-                collaborators.add(new Collaborator(newId, category, limit, projectId));
+                collaborators.add(new Collaborator(newId, name, category, limit, projectId));
                 return newId;
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
         return -1;
+    }
+
+    /**
+     * Fetches all subtask titles for a given task.
+     */
+    public String getSubtaskTitlesForTask(int taskId) {
+        List<String> titles = new ArrayList<>();
+        String sql = "SELECT title FROM subtask WHERE task_id = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, taskId);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                titles.add(rs.getString("title"));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return String.join("; ", titles);
+    }
+
+    /**
+     * Finds the first collaborator assigned to a specific task.
+     */
+    public Collaborator getCollaboratorForTask(int taskId) {
+        String sql = "SELECT collaborator_id FROM subtask WHERE task_id = ? LIMIT 1";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, taskId);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return getCollaboratorById(rs.getInt("collaborator_id"));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 }

@@ -27,4 +27,15 @@ public class TaskDTO {
             this.collaboratorCategory = row[9];
         }
     }
+
+    public String getTaskName() { return taskName; }
+    public String getDescription() { return description; }
+    public String getSubtaskTitle() { return subtask; }
+    public String getStatus() { return status; }
+    public String getPriority() { return priority; }
+    public String getDueDate() { return dueDate; }
+    public String getProjectName() { return projectName; }
+    public String getProjectDescription() { return projectDescription; }
+    public String getCollaboratorName() { return collaborator; }
+    public String getCollaboratorCategory() { return collaboratorCategory; }
 }

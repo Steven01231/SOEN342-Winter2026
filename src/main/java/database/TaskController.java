@@ -29,6 +29,7 @@ public class TaskController{
         stmt.execute(
                 "CREATE TABLE IF NOT EXISTS collaborator (" +
                         "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                        "name TEXT NOT NULL, " +
                         "category TEXT, " +
                         "task_limit INTEGER, " +
                         "project_id INTEGER, " +
@@ -220,25 +221,45 @@ public class TaskController{
             for (org.example.models.Project p : projects) {
                 System.out.println("  ID: " + p.getId() + " | " + p.getName());
             }
-            System.out.print("Enter Project ID (or 0 to create a new project): ");
-            int chosen = 0;
-            try { chosen = Integer.parseInt(scanner.nextLine().trim()); }
-            catch (NumberFormatException e) { /* stays 0 */ }
+            // 1. Change the prompt to tell the user they can skip
+            System.out.print("Enter Project ID (or 0 to create new, or press Enter to skip): ");
+            projectId = 0; // Default to 0 (No Project)
+            String input = scanner.nextLine().trim();
 
-            if (chosen == 0) {
-                projectId = createProjectInline(scanner, proCat);
-            } else {
-                // validate the chosen ID actually exists
-                boolean found = false;
-                for (org.example.models.Project p : projects) {
-                    if (p.getId() == chosen) { found = true; break; }
+            if (!input.isEmpty()) {
+                int chosen;
+                try {
+                    chosen = Integer.parseInt(input);
+                } catch (NumberFormatException e) {
+                    chosen = -2; //invalid input
                 }
-                if (!found) {
-                    System.out.println("Project ID " + chosen + " not found. Task not created.");
-                    return;
+
+                if (chosen == 0) {
+                    projectId = createProjectInline(scanner, proCat);
+                } else if (chosen > 0) {
+                    boolean found = false;
+                    for (org.example.models.Project p : projects) {
+                        if (p.getId() == chosen) {
+                            found = true;
+                            break;
+                        }
+                    }
+
+                    if (found) {
+                        projectId = chosen;
+                    } else {
+                        System.out.println("Project ID " + chosen + " not found. Defaulting to 'No Project'.");
+                    }
                 }
-                projectId = chosen;
             }
+
+            if (projectId == -1) {
+                System.out.println("Project creation failed. Task not created.");
+                return;
+            }
+
+            Task task = new Task(title, description, new Date(), priority, status, dueDate, projectId);
+            taskCat.addTask(task);
         }
 
         if (projectId == -1) {
@@ -246,8 +267,6 @@ public class TaskController{
             return;
         }
 
-        Task task = new Task(title, description, new Date(), priority, status, dueDate, projectId);
-        taskCat.addTask(task);
     }
 
     private int createProjectInline(Scanner scanner, catalogs.ProjectCatalog proCat) {
