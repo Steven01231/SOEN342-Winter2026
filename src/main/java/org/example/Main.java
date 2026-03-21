@@ -86,7 +86,7 @@ public class Main {
                     break;
                 case 3:
                     System.out.println("Creating a new Task...");
-                    tc.createTaskFromUserInput(scanner,taskCat);
+                    tc.createTaskFromUserInput(scanner, taskCat, proCat);
                     break;
                 case 4:
                     System.out.println("Listing all Tasks...");
@@ -120,12 +120,130 @@ public class Main {
                     }
                     break;
                 case 9:
-                    System.out.println("Setting Recurrence Pattern for Task...");
-                    // call method to set recurrence
+                    System.out.println("\n--- Set Recurrence Pattern for Task ---");
+                    try {
+                        System.out.print("Enter Task ID to make recurring: ");
+                        int recTaskId = Integer.parseInt(scanner.nextLine().trim());
+
+                        // validate the task exists
+                        org.example.models.Task templateTask = null;
+                        for (org.example.models.Task t : taskCat.getTasks()) {
+                            if (t.getTaskId() == recTaskId) { templateTask = t; break; }
+                        }
+                        if (templateTask == null) {
+                            System.out.println("No task found with ID " + recTaskId + ". Aborting.");
+                            break;
+                        }
+
+                        System.out.println("Pattern type: DAILY | WEEKLY | MONTHLY | CUSTOM");
+                        System.out.print("Enter pattern type: ");
+                        String patternType = scanner.nextLine().trim().toUpperCase();
+                        if (!patternType.equals("DAILY") && !patternType.equals("WEEKLY")
+                                && !patternType.equals("MONTHLY") && !patternType.equals("CUSTOM")) {
+                            System.out.println("Invalid pattern type. Must be DAILY, WEEKLY, MONTHLY, or CUSTOM.");
+                            break;
+                        }
+
+                        java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd");
+                        java.util.Calendar todayMidnight = java.util.Calendar.getInstance();
+                        todayMidnight.set(java.util.Calendar.HOUR_OF_DAY, 0);
+                        todayMidnight.set(java.util.Calendar.MINUTE, 0);
+                        todayMidnight.set(java.util.Calendar.SECOND, 0);
+                        todayMidnight.set(java.util.Calendar.MILLISECOND, 0);
+                        java.util.Date today = todayMidnight.getTime();
+
+                        System.out.print("Start date (yyyy-MM-dd): ");
+                        java.util.Date recStart = sdf.parse(scanner.nextLine().trim());
+
+                        System.out.print("End date   (yyyy-MM-dd): ");
+                        java.util.Date recEnd = sdf.parse(scanner.nextLine().trim());
+
+                        if (recEnd.before(recStart)) {
+                            System.out.println("End date must be on or after start date. Aborting.");
+                            break;
+                        }
+                        if (recEnd.before(today)) {
+                            System.out.println("End date is entirely in the past — no future occurrences possible. Aborting.");
+                            break;
+                        }
+
+                        String selectedDays = null;
+                        int customInterval  = 0;
+
+                        if (patternType.equals("WEEKLY")) {
+                            System.out.print("Selected days (comma-separated, e.g. Mon,Wed,Fri): ");
+                            selectedDays = scanner.nextLine().trim();
+                            if (selectedDays.isEmpty()) {
+                                System.out.println("No days selected for WEEKLY pattern. Aborting.");
+                                break;
+                            }
+                        } else if (patternType.equals("CUSTOM")) {
+                            System.out.print("Interval in days: ");
+                            customInterval = Integer.parseInt(scanner.nextLine().trim());
+                            if (customInterval <= 0) {
+                                System.out.println("Interval must be a positive integer. Aborting.");
+                                break;
+                            }
+                        }
+
+                        org.example.models.RecurrencePattern rp = new org.example.models.RecurrencePattern(
+                                patternType, customInterval, recStart, recEnd, selectedDays, recTaskId);
+
+                        // generate occurrences and filter out past dates
+                        java.util.List<java.util.Date> allOccurrences = rp.generateOccurrences();
+                        java.util.List<java.util.Date> occurrences = new java.util.ArrayList<>();
+                        for (java.util.Date d : allOccurrences) {
+                            if (!d.before(today)) occurrences.add(d);
+                        }
+
+                        int skipped = allOccurrences.size() - occurrences.size();
+                        if (skipped > 0) {
+                            System.out.println("Note: " + skipped + " past occurrence(s) skipped.");
+                        }
+
+                        if (occurrences.isEmpty()) {
+                            System.out.println("No valid future occurrences generated for this pattern. "
+                                    + "Check that your selected days/dates produce at least one occurrence on or after today.");
+                            break;
+                        }
+
+                        recPatCat.saveRecurrencePattern(rp);
+
+                        java.text.SimpleDateFormat display = new java.text.SimpleDateFormat("yyyy-MM-dd");
+                        System.out.println("\nGenerated " + occurrences.size() + " occurrence(s):");
+                        for (int i = 0; i < occurrences.size(); i++) {
+                            java.util.Date occDate = occurrences.get(i);
+                            System.out.println("  [" + (i + 1) + "] " + templateTask.getTitle()
+                                    + " | Due: " + display.format(occDate));
+
+                            org.example.models.Task occ = new org.example.models.Task(
+                                    templateTask.getTitle(), "Occurrence " + (i + 1),
+                                    new java.util.Date(), templateTask.getPriorityLevel(),
+                                    "todo", occDate, templateTask.getProjectId());
+                            taskCat.addTask(occ);
+                        }
+                        System.out.println("All occurrences saved as individual tasks.");
+                    } catch (java.text.ParseException e) {
+                        System.out.println("Invalid date format. Use yyyy-MM-dd.");
+                    } catch (NumberFormatException e) {
+                        System.out.println("Invalid number input.");
+                    }
                     break;
                 case 10:
-                    System.out.println("Listing all Recurrence Patterns...");
-                    // call method to list recurrence patterns
+                    System.out.println("\n--- Recurrence Patterns ---");
+                    if (recPatCat.getRecurrencePatterns().isEmpty()) {
+                        System.out.println("No recurrence patterns defined yet.");
+                    } else {
+                        for (org.example.models.RecurrencePattern rp : recPatCat.getRecurrencePatterns()) {
+                            System.out.println("  ID: " + rp.getId()
+                                    + " | Task ID: " + rp.getTaskId()
+                                    + " | Type: " + rp.getPatternType()
+                                    + " | Start: " + rp.getStartDate()
+                                    + " | End: " + rp.getEndDate()
+                                    + (rp.getSelectedDays() != null ? " | Days: " + rp.getSelectedDays() : "")
+                                    + (rp.getCustomInterval() > 0 ? " | Interval: " + rp.getCustomInterval() + "d" : ""));
+                        }
+                    }
                     break;
                 case 11:
                     System.out.println("--- Import Tasks ---");

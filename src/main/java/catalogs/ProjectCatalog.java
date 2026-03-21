@@ -32,6 +32,10 @@ public class ProjectCatalog {
         }
     }
 
+    public List<Project> getProjects() {
+        return projects;
+    }
+
     public int findIdByName(String name) {
         for (Project p : projects) {
             if (p.getName().equalsIgnoreCase(name)) {

@@ -162,63 +162,111 @@ public class TaskController{
         }
     }
 
-    public void createTaskFromUserInput(Scanner scanner, TaskCatalog taskCat) {
+    public void createTaskFromUserInput(Scanner scanner, TaskCatalog taskCat, catalogs.ProjectCatalog proCat) {
         System.out.println("=== Create a New Task ===");
 
         System.out.print("Title: ");
-        String title = scanner.nextLine();
+        String title = scanner.nextLine().trim();
+        if (title.isEmpty()) {
+            System.out.println("Title cannot be empty. Task not created.");
+            return;
+        }
 
         System.out.print("Description: ");
         String description = scanner.nextLine();
 
-        System.out.print("Priority Level (integer): ");
-        int priority = 1; // default
+        System.out.print("Priority Level (1-5, default 1): ");
+        int priority = 1;
         try {
-            priority = Integer.parseInt(scanner.nextLine());
+            int p = Integer.parseInt(scanner.nextLine().trim());
+            if (p >= 1 && p <= 5) priority = p;
+            else System.out.println("Out of range, using priority 1.");
         } catch (NumberFormatException e) {
-            System.out.println("Invalid input, using default priority 1.");
+            System.out.println("Invalid input, using priority 1.");
         }
 
-        System.out.print("Status (default 'Pending'): ");
-        String status = scanner.nextLine();
-        if (status.isEmpty()) {
-            status = "null";
+        System.out.print("Status (todo / in_progress / blocked / done, default 'todo'): ");
+        String status = scanner.nextLine().trim().toLowerCase();
+        if (!status.equals("todo") && !status.equals("in_progress")
+                && !status.equals("blocked") && !status.equals("done")) {
+            System.out.println("Unrecognised status, defaulting to 'todo'.");
+            status = "todo";
         }
 
-        System.out.print("Due in days from today (integer, optional, press Enter to skip): ");
+        System.out.print("Due in days from today (integer, press Enter to skip): ");
         Date dueDate = null;
-        String dueInput = scanner.nextLine();
+        String dueInput = scanner.nextLine().trim();
         if (!dueInput.isEmpty()) {
             try {
                 int days = Integer.parseInt(dueInput);
-                dueDate = new Date(System.currentTimeMillis() + days * 24L * 60 * 60 * 1000);
+                if (days < 0) {
+                    System.out.println("Due date cannot be in the past. No due date set.");
+                } else {
+                    dueDate = new Date(System.currentTimeMillis() + days * 24L * 60 * 60 * 1000);
+                }
             } catch (NumberFormatException e) {
                 System.out.println("Invalid input, no due date set.");
             }
         }
 
-        System.out.print("Project ID (integer): ");
-        int projectId = 0;
-        try {
-            projectId = Integer.parseInt(scanner.nextLine());
-        } catch (NumberFormatException e) {
-            System.out.println("Invalid input, using project ID 0.");
+        // --- project selection / creation ---
+        java.util.List<org.example.models.Project> projects = proCat.getProjects();
+        int projectId;
+        if (projects.isEmpty()) {
+            System.out.println("No projects exist yet. Let's create one first.");
+            projectId = createProjectInline(scanner, proCat);
+        } else {
+            System.out.println("Existing projects:");
+            for (org.example.models.Project p : projects) {
+                System.out.println("  ID: " + p.getId() + " | " + p.getName());
+            }
+            System.out.print("Enter Project ID (or 0 to create a new project): ");
+            int chosen = 0;
+            try { chosen = Integer.parseInt(scanner.nextLine().trim()); }
+            catch (NumberFormatException e) { /* stays 0 */ }
+
+            if (chosen == 0) {
+                projectId = createProjectInline(scanner, proCat);
+            } else {
+                // validate the chosen ID actually exists
+                boolean found = false;
+                for (org.example.models.Project p : projects) {
+                    if (p.getId() == chosen) { found = true; break; }
+                }
+                if (!found) {
+                    System.out.println("Project ID " + chosen + " not found. Task not created.");
+                    return;
+                }
+                projectId = chosen;
+            }
         }
 
-        // Build Task object
-        Task task = new Task(
-                title,
-                description,
-                new Date(),    // creation date is now
-                priority,
-                status,
-                dueDate,
-                projectId
-        );
+        if (projectId == -1) {
+            System.out.println("Project creation failed. Task not created.");
+            return;
+        }
 
+        Task task = new Task(title, description, new Date(), priority, status, dueDate, projectId);
         taskCat.addTask(task);
+    }
 
-
+    private int createProjectInline(Scanner scanner, catalogs.ProjectCatalog proCat) {
+        System.out.print("New project name: ");
+        String name = scanner.nextLine().trim();
+        if (name.isEmpty()) {
+            System.out.println("Project name cannot be empty.");
+            return -1;
+        }
+        // enforce uniqueness
+        if (proCat.findIdByName(name) != -1) {
+            System.out.println("A project named '" + name + "' already exists. Using it.");
+            return proCat.findIdByName(name);
+        }
+        System.out.print("Project description: ");
+        String desc = scanner.nextLine();
+        int id = proCat.createProject(name, desc);
+        if (id != -1) System.out.println("Project '" + name + "' created with ID " + id + ".");
+        return id;
     }
 
 }

@@ -52,7 +52,7 @@ public class TaskCatalog {
 
         String query = "INSERT INTO task (title, description, creation_date, priority_level, status, due_date, project_id) VALUES (?, ?, ?, ?, ?, ?, ?)";
 
-        try (PreparedStatement pstmt = conn.prepareStatement(query)) {
+        try (PreparedStatement pstmt = conn.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)) {
 
             pstmt.setString(1, task.getTitle());
             pstmt.setString(2, task.getDescription());
@@ -85,7 +85,14 @@ public class TaskCatalog {
             pstmt.setInt(7, task.getProjectId());
 
             pstmt.executeUpdate();
-            System.out.println("Task inserted successfully!");
+
+            try (ResultSet keys = pstmt.getGeneratedKeys()) {
+                if (keys.next()) {
+                    task.setTaskId(keys.getInt(1));
+                }
+            }
+            tasks.add(task);
+            System.out.println("Task inserted successfully with ID " + task.getTaskId() + "!");
 
         } catch (SQLException e) {
             e.printStackTrace();
