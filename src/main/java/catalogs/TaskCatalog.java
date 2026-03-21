@@ -52,7 +52,7 @@ public class TaskCatalog {
 
         String query = "INSERT INTO task (title, description, creation_date, priority_level, status, due_date, project_id) VALUES (?, ?, ?, ?, ?, ?, ?)";
 
-        try (PreparedStatement pstmt = conn.prepareStatement(query)) {
+        try (PreparedStatement pstmt = conn.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)) {
 
             pstmt.setString(1, task.getTitle());
             pstmt.setString(2, task.getDescription());
@@ -85,7 +85,14 @@ public class TaskCatalog {
             pstmt.setInt(7, task.getProjectId());
 
             pstmt.executeUpdate();
-            System.out.println("Task inserted successfully!");
+
+            try (ResultSet keys = pstmt.getGeneratedKeys()) {
+                if (keys.next()) {
+                    task.setTaskId(keys.getInt(1));
+                }
+            }
+            tasks.add(task);
+            System.out.println("Task inserted successfully with ID " + task.getTaskId() + "!");
 
         } catch (SQLException e) {
             e.printStackTrace();
@@ -97,6 +104,62 @@ public class TaskCatalog {
         return "TaskCatalog{" +
                 "tasks=" + tasks +
                 '}';
+    }
+
+    /** Returns tasks whose due date falls within [from, to] inclusive, sorted by due date ASC. */
+    public List<Task> searchByDateRange(java.util.Date from, java.util.Date to) {
+        List<Task> results = new ArrayList<>();
+        String sql = "SELECT * FROM task WHERE due_date >= ? AND due_date <= ? ORDER BY due_date ASC";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setLong(1, from.getTime());
+            ps.setLong(2, to.getTime());
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Task task = new Task(rs.getString("title"), rs.getString("description"));
+                    task.setTaskId(rs.getInt("id"));
+                    task.setCreationDate(new java.util.Date(rs.getLong("creation_date")));
+                    task.setPriorityLevel(rs.getInt("priority_level"));
+                    task.setStatus(rs.getString("status"));
+                    task.setDueDate(new java.util.Date(rs.getLong("due_date")));
+                    task.setProjectId(rs.getInt("project_id"));
+                    results.add(task);
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error searching by date range: " + e.getMessage());
+        }
+        return results;
+    }
+
+    /**
+     * Returns tasks whose due date falls on the given day of week (0=Sun … 6=Sat),
+     * sorted by due date ASC. Uses SQLite's strftime to extract the weekday.
+     */
+    public List<Task> searchByDayOfWeek(int dayOfWeek) {
+        List<Task> results = new ArrayList<>();
+        // strftime('%w', ...) returns 0=Sunday through 6=Saturday
+        String sql = "SELECT * FROM task " +
+                     "WHERE due_date IS NOT NULL AND due_date != 0 " +
+                     "AND CAST(strftime('%w', datetime(due_date/1000, 'unixepoch')) AS INTEGER) = ? " +
+                     "ORDER BY due_date ASC";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, dayOfWeek);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Task task = new Task(rs.getString("title"), rs.getString("description"));
+                    task.setTaskId(rs.getInt("id"));
+                    task.setCreationDate(new java.util.Date(rs.getLong("creation_date")));
+                    task.setPriorityLevel(rs.getInt("priority_level"));
+                    task.setStatus(rs.getString("status"));
+                    task.setDueDate(new java.util.Date(rs.getLong("due_date")));
+                    task.setProjectId(rs.getInt("project_id"));
+                    results.add(task);
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error searching by day of week: " + e.getMessage());
+        }
+        return results;
     }
 
     public List<Task> advancedSearch(String keyword, String status) {
