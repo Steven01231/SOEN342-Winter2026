@@ -418,6 +418,8 @@ public class Main {
                                 System.out.print("New status (todo, in_progress, blocked, done): ");
                                 String newStatus = scanner.nextLine();
                                 tc.updateTaskStatus(conn, updateTaskId, newStatus);
+
+                                recCat.addRecord("Task status updated to " + newStatus, updateTaskId);
                                 break;
                             case 2:
                                 System.out.print("New due date in days from today (integer): ");
@@ -425,6 +427,8 @@ public class Main {
                                     int days = Integer.parseInt(scanner.nextLine().trim());
                                     java.util.Date newDue = new java.util.Date(System.currentTimeMillis() + days * 24L * 60 * 60 * 1000);
                                     tc.updateTaskDueDate(conn, updateTaskId, newDue);
+
+                                    recCat.addRecord("Task due date updated", updateTaskId);
                                 } catch (NumberFormatException e) {
                                     System.out.println("Invalid input. Due date not updated.");
                                 }
@@ -451,6 +455,8 @@ public class Main {
                                     org.example.models.Subtask created = colCat.assignTaskToCollaborator(updateTaskId, collabId, subtaskTitle);
                                     if (created != null) {
                                         subCat.getSubtasks().add(created); // keep in-memory list in sync
+
+                                        recCat.addRecord("Subtask created and assigned to collaborator ID " + collabId, updateTaskId);
                                     }
                                 } catch (java.util.InputMismatchException e) {
                                     System.out.println("Invalid input.");
@@ -483,6 +489,8 @@ public class Main {
                                     System.out.print("New status (todo, in_progress, blocked, done): ");
                                     String subtaskStatus = scanner.nextLine();
                                     subCat.updateSubtaskStatus(subtaskId, subtaskStatus);
+
+                                    recCat.addRecord("Subtask " + subtaskId + " status updated to " + subtaskStatus, updateTaskId);
                                     // warn if reopening causes collaborator overload
                                     if (!subtaskStatus.trim().equalsIgnoreCase("done")) {
                                         for (org.example.models.Subtask s : subCat.getSubtasks()) {
