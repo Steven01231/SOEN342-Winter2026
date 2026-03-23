@@ -4,19 +4,12 @@ import java.util.Date;
 
 public class Task {
 
-    public enum StatusType
-    {
-        TODO,
-        IN_PROGRESS,
-        BLOCKED,
-        DONE
-    }
 
     private int taskId;
     private String title;
     private String description;
     private Date creationDate;
-    private int priorityLevel;
+    private PriorityLevel priorityLevel;
     private StatusType status;
     private Date dueDate;
     private int projectId;
@@ -30,27 +23,12 @@ public class Task {
         this.description = description;
     }
 
-    public Task(String title, String description, Date creationDate, int priorityLevel, String strStatus, Date dueDate, int projectId) {
+    public Task(String title, String description, Date creationDate, PriorityLevel priorityLevel, StatusType strStatus, Date dueDate, int projectId) {
         this.title = title;
         this.description = description;
         this.creationDate = creationDate;
         this.priorityLevel = priorityLevel;
-        switch(strStatus){
-            case "todo":
-                this.status = StatusType.TODO;
-                break;
-            case "in_progress":
-                this.status = StatusType.IN_PROGRESS;
-                break;
-            case "blocked":
-                this.status = StatusType.BLOCKED;
-                break;
-            case "done":
-                this.status = StatusType.DONE;
-                break;
-            default:
-                this.status = null;
-        }
+        this.status = strStatus;
         this.dueDate = dueDate;
         this.projectId = projectId;
     }
@@ -87,11 +65,11 @@ public class Task {
         this.creationDate = creationDate;
     }
 
-    public int getPriorityLevel() {
+    public PriorityLevel getPriorityLevel() {
         return priorityLevel;
     }
 
-    public void setPriorityLevel(int priorityLevel) {
+    public void setPriorityLevel(PriorityLevel priorityLevel) {
         this.priorityLevel = priorityLevel;
     }
 

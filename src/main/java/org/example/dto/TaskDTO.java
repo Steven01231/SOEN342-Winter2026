@@ -1,11 +1,14 @@
 package org.example.dto;
 
+import org.example.models.PriorityLevel;
+import org.example.models.StatusType;
+
 public class TaskDTO {
     public String taskName;
     public String description;
     public String subtask;
     public String status;
-    public String priority;
+    public PriorityLevel priority;
     public String dueDate;
     public String projectName;
     public String projectDescription;
@@ -19,7 +22,7 @@ public class TaskDTO {
             this.description = row[1];
             this.subtask = row[2];
             this.status = row[3];
-            this.priority = row[4];
+            this.priority = PriorityLevel.valueOf(row[4]);
             this.dueDate = row[5];
             this.projectName = row[6];
             this.projectDescription = row[7];
@@ -32,7 +35,7 @@ public class TaskDTO {
     public String getDescription() { return description; }
     public String getSubtaskTitle() { return subtask; }
     public String getStatus() { return status; }
-    public String getPriority() { return priority; }
+    public PriorityLevel getPriority() { return priority; }
     public String getDueDate() { return dueDate; }
     public String getProjectName() { return projectName; }
     public String getProjectDescription() { return projectDescription; }

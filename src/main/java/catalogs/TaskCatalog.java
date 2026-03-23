@@ -1,5 +1,6 @@
 package catalogs;
 
+import org.example.models.PriorityLevel;
 import org.example.models.Task;
 
 import java.sql.*;
@@ -24,7 +25,7 @@ public class TaskCatalog {
                 Task task = new Task(rs.getString("title"), rs.getString("description"));
                 task.setTaskId(rs.getInt("id"));
                 task.setCreationDate(new Date(rs.getLong("creation_date")));
-                task.setPriorityLevel(rs.getInt("priority_level"));
+                task.setPriorityLevel(PriorityLevel.fromValue(rs.getInt("priority_level")));
                 task.setStatus(rs.getString("status"));
                 task.setDueDate(new Date(rs.getLong("due_date")));
                 task.setProjectId(rs.getInt("project_id"));
@@ -65,7 +66,7 @@ public class TaskCatalog {
             }
 
             // priority_level
-            pstmt.setInt(4, task.getPriorityLevel());
+            pstmt.setInt(4, task.getPriorityLevel().ordinal());
 
             // status
             if (task.getStatus() != null) {
@@ -119,7 +120,7 @@ public class TaskCatalog {
                     Task task = new Task(rs.getString("title"), rs.getString("description"));
                     task.setTaskId(rs.getInt("id"));
                     task.setCreationDate(new java.util.Date(rs.getLong("creation_date")));
-                    task.setPriorityLevel(rs.getInt("priority_level"));
+                    task.setPriorityLevel(PriorityLevel.fromValue(rs.getInt("priority_level")));
                     task.setStatus(rs.getString("status"));
                     task.setDueDate(new java.util.Date(rs.getLong("due_date")));
                     task.setProjectId(rs.getInt("project_id"));
@@ -150,7 +151,7 @@ public class TaskCatalog {
                     Task task = new Task(rs.getString("title"), rs.getString("description"));
                     task.setTaskId(rs.getInt("id"));
                     task.setCreationDate(new java.util.Date(rs.getLong("creation_date")));
-                    task.setPriorityLevel(rs.getInt("priority_level"));
+                    task.setPriorityLevel(PriorityLevel.fromValue(rs.getInt("priority_level")));
                     task.setStatus(rs.getString("status"));
                     task.setDueDate(new java.util.Date(rs.getLong("due_date")));
                     task.setProjectId(rs.getInt("project_id"));
@@ -201,7 +202,7 @@ public class TaskCatalog {
                     Task task = new Task(rs.getString("title"), rs.getString("description"));
                     task.setTaskId(rs.getInt("id"));
                     task.setCreationDate(new java.util.Date(rs.getLong("creation_date")));
-                    task.setPriorityLevel(rs.getInt("priority_level"));
+                    task.setPriorityLevel(PriorityLevel.fromValue(rs.getInt("priority_level")));
                     task.setStatus(rs.getString("status"));
                     task.setDueDate(new java.util.Date(rs.getLong("due_date")));
                     task.setProjectId(rs.getInt("project_id"));
@@ -212,5 +213,28 @@ public class TaskCatalog {
             System.err.println("Error searching tasks: " + e.getMessage());
         }
         return results;
+    }
+
+    public void displayTasks() {
+        if (tasks == null || tasks.isEmpty()) {
+            System.out.println("No tasks available.");
+            return;
+        }
+
+        System.out.printf("%-5s %-20s %-12s %-12s %-20s %-20s %-10s%n",
+                "ID", "Title", "Priority", "Status", "Created", "Due", "Project");
+
+        System.out.println("--------------------------------------------------------------------------------------------");
+
+        for (Task t : tasks) {
+            System.out.printf("%-5d %-20s %-12s %-12s %-20s %-20s %-10d%n",
+                    t.getTaskId(),
+                    t.getTitle(),
+                    t.getPriorityLevel(),
+                    t.getStatus(),
+                    t.getCreationDate(),
+                    t.getDueDate(),
+                    t.getProjectId());
+        }
     }
 }

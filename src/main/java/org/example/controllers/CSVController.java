@@ -3,6 +3,7 @@ package org.example.controllers;
 import catalogs.CollaboratorCatalog;
 import org.example.dto.TaskDTO;
 import org.example.models.Collaborator;
+import org.example.models.PriorityLevel;
 import org.example.models.Task;
 import org.example.utils.CSVParser;
 import org.example.utils.CSVExporter;
@@ -40,13 +41,13 @@ public class CSVController {
             newTask.setProjectId(projectId);
 
             try {
-                if (dto.priority != null && !dto.priority.isEmpty()) {
-                    newTask.setPriorityLevel(Integer.parseInt(dto.priority.trim()));
+                if (dto.priority != null) {
+                    newTask.setPriorityLevel(dto.priority);
                 } else {
-                    newTask.setPriorityLevel(1);
+                    newTask.setPriorityLevel(PriorityLevel.fromValue(1));
                 }
             } catch (NumberFormatException e) {
-                newTask.setPriorityLevel(1);
+                newTask.setPriorityLevel(PriorityLevel.fromValue(1));
             }
 
             if (dto.status != null && !dto.status.trim().isEmpty()) {
