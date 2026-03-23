@@ -97,6 +97,8 @@ public class SubtaskCatalog {
             if (rows > 0) {
                 System.out.println("Subtask " + subtaskId + " status updated to '"
                     + newStatus.trim().toLowerCase() + "'. Parent task status is unchanged.");
+
+
                 // sync in-memory list
                 for (Subtask s : subtasks) {
                     if (s.getId() == subtaskId) {
@@ -136,6 +138,14 @@ public class SubtaskCatalog {
                         subtask.getId(),
                         subtask.getTitle(),
                         subtask.getStatus());
+            }
+        }
+    }
+
+    public void markAllSubtasksDone(int taskId) {
+        for (Subtask sub : subtasks) {
+            if (sub.getTaskId() == taskId) {
+                sub.setStatus("done");
             }
         }
     }

@@ -417,7 +417,7 @@ public class Main {
                             case 1:
                                 System.out.print("New status (todo, in_progress, blocked, done): ");
                                 String newStatus = scanner.nextLine();
-                                tc.updateTaskStatus(conn, updateTaskId, newStatus);
+                                tc.updateTaskStatus(conn, updateTaskId, newStatus, subCat);
 
                                 recCat.addRecord("Task status updated to " + newStatus, updateTaskId);
                                 break;

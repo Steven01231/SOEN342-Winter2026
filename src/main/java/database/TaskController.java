@@ -134,7 +134,7 @@ public class TaskController{
         }
     }
 
-    public void updateTaskStatus(Connection conn, int taskId, String newStatus) {
+    public void updateTaskStatus(Connection conn, int taskId, String newStatus, SubtaskCatalog subCat) {
         String query = "UPDATE task SET status = ? WHERE id = ?";
         try (PreparedStatement ps = conn.prepareStatement(query)) {
             ps.setString(1, newStatus.trim().toLowerCase());
@@ -142,6 +142,20 @@ public class TaskController{
             int rows = ps.executeUpdate();
             if (rows > 0) {
                 System.out.println("Task " + taskId + " status updated to '" + newStatus.trim().toLowerCase() + "'.");
+                if (newStatus.equals("done")) {
+                    String subtaskQuery = "UPDATE subtask SET status = 'done' WHERE task_id = ?";
+
+                    try (PreparedStatement subPs = conn.prepareStatement(subtaskQuery)) {
+                        subPs.setInt(1, taskId);
+                        int updatedSubs = subPs.executeUpdate();
+
+                        System.out.println(updatedSubs + " subtasks marked as done.");
+
+                        // 🔥 Update in-memory list too
+                        subCat.markAllSubtasksDone(taskId);
+
+                    }
+                }
             } else {
                 System.out.println("No task found with ID " + taskId + ".");
             }
