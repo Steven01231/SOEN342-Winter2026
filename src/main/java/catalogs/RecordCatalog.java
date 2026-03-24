@@ -61,4 +61,37 @@ public class RecordCatalog {
             System.out.println("History feature is currently unavailable (Table missing or error).");
         }
     }
+
+    public void addRecord(String description, int taskId) {
+
+        String query = "INSERT INTO record (timestamp, description, task_id) VALUES (?, ?, ?)";
+
+        try (PreparedStatement pstmt = conn.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)) {
+
+            // timestamp
+            pstmt.setLong(1, new java.util.Date().getTime());
+
+            // description
+            pstmt.setString(2, description);
+
+            // task_id
+            pstmt.setInt(3, taskId);
+
+            pstmt.executeUpdate();
+
+            // Get generated ID
+            try (ResultSet keys = pstmt.getGeneratedKeys()) {
+                if (keys.next()) {
+                    int id = keys.getInt(1);
+                    System.out.println("Record saved with ID: " + id);
+                }
+            }
+
+            // Also store in memory (if you still use list)
+            records.add(new Record(0, new java.util.Date(), description, taskId));
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
 }

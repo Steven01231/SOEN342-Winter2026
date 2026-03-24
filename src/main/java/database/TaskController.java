@@ -1,6 +1,12 @@
 package database;
 
+import catalogs.ProjectCatalog;
+import catalogs.RecordCatalog;
+import catalogs.SubtaskCatalog;
 import catalogs.TaskCatalog;
+import org.example.models.PriorityLevel;
+import org.example.models.StatusType;
+import org.example.models.Subtask;
 import org.example.models.Task;
 
 import java.sql.Connection;
@@ -112,25 +118,6 @@ public class TaskController{
         stmt.close();
     }
 
-
-
-    public void insertTask(Connection conn, String title, String description) {
-        String sqlInsert = "INSERT INTO task (title, description) VALUES (?, ?)";
-
-        try (// Assuming you have a connection method
-             PreparedStatement pstmt = conn.prepareStatement(sqlInsert)) {
-
-            pstmt.setString(1, title);
-            pstmt.setString(2, description);
-
-            pstmt.executeUpdate();
-            System.out.println("Task inserted successfully!");
-
-        } catch (SQLException e) {
-            System.out.println("Error inserting task: " + e.getMessage());
-        }
-    }
-
     public void updateTaskDueDate(Connection conn, int taskId, java.util.Date newDueDate) {
         String query = "UPDATE task SET due_date = ? WHERE id = ?";
         try (PreparedStatement ps = conn.prepareStatement(query)) {
@@ -147,7 +134,7 @@ public class TaskController{
         }
     }
 
-    public void updateTaskStatus(Connection conn, int taskId, String newStatus) {
+    public void updateTaskStatus(Connection conn, int taskId, String newStatus, SubtaskCatalog subCat) {
         String query = "UPDATE task SET status = ? WHERE id = ?";
         try (PreparedStatement ps = conn.prepareStatement(query)) {
             ps.setString(1, newStatus.trim().toLowerCase());
@@ -155,6 +142,20 @@ public class TaskController{
             int rows = ps.executeUpdate();
             if (rows > 0) {
                 System.out.println("Task " + taskId + " status updated to '" + newStatus.trim().toLowerCase() + "'.");
+                if (newStatus.equals("done")) {
+                    String subtaskQuery = "UPDATE subtask SET status = 'done' WHERE task_id = ?";
+
+                    try (PreparedStatement subPs = conn.prepareStatement(subtaskQuery)) {
+                        subPs.setInt(1, taskId);
+                        int updatedSubs = subPs.executeUpdate();
+
+                        System.out.println(updatedSubs + " subtasks marked as done.");
+
+                        // 🔥 Update in-memory list too
+                        subCat.markAllSubtasksDone(taskId);
+
+                    }
+                }
             } else {
                 System.out.println("No task found with ID " + taskId + ".");
             }
@@ -163,9 +164,10 @@ public class TaskController{
         }
     }
 
-    public void createTaskFromUserInput(Scanner scanner, TaskCatalog taskCat, catalogs.ProjectCatalog proCat) {
+    public void createTaskFromUserInput(Scanner scanner, TaskCatalog taskCat, ProjectCatalog proCat, RecordCatalog recCat) {
         System.out.println("=== Create a New Task ===");
 
+        // --- Title ---
         System.out.print("Title: ");
         String title = scanner.nextLine().trim();
         if (title.isEmpty()) {
@@ -173,30 +175,61 @@ public class TaskController{
             return;
         }
 
+        // --- Description ---
         System.out.print("Description: ");
         String description = scanner.nextLine();
 
-        System.out.print("Priority Level (1-5, default 1): ");
-        int priority = 1;
-        try {
-            int p = Integer.parseInt(scanner.nextLine().trim());
-            if (p >= 1 && p <= 5) priority = p;
-            else System.out.println("Out of range, using priority 1.");
-        } catch (NumberFormatException e) {
-            System.out.println("Invalid input, using priority 1.");
+        // --- Priority (1-5) -> PriorityLevel enum ---
+        System.out.print("Priority Level (1-4, default 1): ");
+        PriorityLevel priorityLevel = PriorityLevel.LOW;
+
+        String priorityInput = scanner.nextLine().trim();
+        if (!priorityInput.isEmpty()) {
+            try {
+                int p = Integer.parseInt(priorityInput);
+                switch (p) {
+                    case 1: priorityLevel = PriorityLevel.LOW; break;
+                    case 2: priorityLevel = PriorityLevel.MEDIUM; break;
+                    case 3: priorityLevel = PriorityLevel.HIGH; break;
+                    case 4: priorityLevel = PriorityLevel.CRITICAL; break;
+                    default:
+                        System.out.println("Out of range, using LOW.");
+                        priorityLevel = PriorityLevel.LOW;
+                }
+            } catch (NumberFormatException e) {
+                System.out.println("Invalid input, using LOW.");
+                priorityLevel = PriorityLevel.LOW;
+            }
         }
 
+        // --- Status (enum) ---
         System.out.print("Status (todo / in_progress / blocked / done, default 'todo'): ");
-        String status = scanner.nextLine().trim().toLowerCase();
-        if (!status.equals("todo") && !status.equals("in_progress")
-                && !status.equals("blocked") && !status.equals("done")) {
-            System.out.println("Unrecognised status, defaulting to 'todo'.");
-            status = "todo";
+        String statusInput = scanner.nextLine().trim().toLowerCase();
+
+        StatusType statusType;
+        switch (statusInput) {
+            case "todo":
+                statusType = StatusType.TODO;
+                break;
+            case "in_progress":
+                statusType = StatusType.IN_PROGRESS;
+                break;
+            case "blocked":
+                statusType = StatusType.BLOCKED;
+                break;
+            case "done":
+                statusType = StatusType.DONE;
+                break;
+            default:
+                System.out.println("Unrecognised status, defaulting to 'TODO'.");
+                statusType = StatusType.TODO;
         }
 
+        // --- Due Date ---
         System.out.print("Due in days from today (integer, press Enter to skip): ");
         Date dueDate = null;
         String dueInput = scanner.nextLine().trim();
+
         if (!dueInput.isEmpty()) {
             try {
                 int days = Integer.parseInt(dueInput);
@@ -210,9 +243,10 @@ public class TaskController{
             }
         }
 
-        // --- project selection / creation ---
+        // --- Project selection / creation ---
         java.util.List<org.example.models.Project> projects = proCat.getProjects();
-        int projectId;
+        int projectId = 0;
+
         if (projects.isEmpty()) {
             System.out.println("No projects exist yet. Let's create one first.");
             projectId = createProjectInline(scanner, proCat);
@@ -221,9 +255,8 @@ public class TaskController{
             for (org.example.models.Project p : projects) {
                 System.out.println("  ID: " + p.getId() + " | " + p.getName());
             }
-            // 1. Change the prompt to tell the user they can skip
+
             System.out.print("Enter Project ID (or 0 to create new, or press Enter to skip): ");
-            projectId = 0; // Default to 0 (No Project)
             String input = scanner.nextLine().trim();
 
             if (!input.isEmpty()) {
@@ -231,7 +264,7 @@ public class TaskController{
                 try {
                     chosen = Integer.parseInt(input);
                 } catch (NumberFormatException e) {
-                    chosen = -2; //invalid input
+                    chosen = -2;
                 }
 
                 if (chosen == 0) {
@@ -248,18 +281,10 @@ public class TaskController{
                     if (found) {
                         projectId = chosen;
                     } else {
-                        System.out.println("Project ID " + chosen + " not found. Defaulting to 'No Project'.");
+                        System.out.println("Project ID not found. Defaulting to 'No Project'.");
                     }
                 }
             }
-
-            if (projectId == -1) {
-                System.out.println("Project creation failed. Task not created.");
-                return;
-            }
-
-            Task task = new Task(title, description, new Date(), priority, status, dueDate, projectId);
-            taskCat.addTask(task);
         }
 
         if (projectId == -1) {
@@ -267,9 +292,64 @@ public class TaskController{
             return;
         }
 
+        // --- Create Task ---
+        Task task = new Task(
+                title,
+                description,
+                new Date(),
+                priorityLevel,
+                statusType,
+                dueDate,
+                projectId
+        );
+
+        taskCat.addTask(task);
+
+        recCat.addRecord("Task created", task.getTaskId());
+
+        System.out.println("Task created successfully!");
     }
 
-    private int createProjectInline(Scanner scanner, catalogs.ProjectCatalog proCat) {
+    public void createSubtaskUI(Scanner scanner, SubtaskCatalog catalog, TaskCatalog taskCat) {
+
+        System.out.println("=== Create Subtask ===");
+
+        // Title
+        System.out.print("Enter subtask title: ");
+        String title = scanner.nextLine();
+
+        // Status
+        System.out.print("Enter status (e.g., todo, in progress, done): ");
+        String status = scanner.nextLine();
+
+        // Task ID
+        taskCat.displayTasks();
+        System.out.print("Enter task ID: ");
+        int taskId = scanner.nextInt();
+
+        // Ask if collaborator is needed
+        System.out.print("Assign a collaborator? (y/n): ");
+        char choice = scanner.next().toLowerCase().charAt(0);
+
+        int collaboratorId = -1; // default value
+
+        if (choice == 'y') {
+            System.out.print("Enter collaborator ID: ");
+            collaboratorId = scanner.nextInt();
+        }
+
+        scanner.nextLine(); // clear buffer
+
+        // Create Subtask object
+        Subtask subtask = new Subtask(0, title, status, taskId, collaboratorId);
+
+        // Use catalog to add subtask
+        catalog.addSubtask(subtask);
+
+        System.out.println("Subtask created successfully!");
+    }
+
+    public int createProjectInline(Scanner scanner, catalogs.ProjectCatalog proCat) {
         System.out.print("New project name: ");
         String name = scanner.nextLine().trim();
         if (name.isEmpty()) {

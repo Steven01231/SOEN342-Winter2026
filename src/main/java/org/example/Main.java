@@ -10,6 +10,7 @@ import java.util.Scanner;
 import catalogs.*;
 import database.TaskController;
 import org.example.controllers.CSVController;
+import org.example.models.StatusType;
 import org.example.models.Task;
 import org.example.utils.CSVExporter;
 
@@ -78,28 +79,28 @@ public class Main {
 
             switch (choice) {
                 case 1:
-                    System.out.println("Creating a new Project...");
-                    // call method to create project
+                    tc.createProjectInline(scanner,proCat);
                     break;
                 case 2:
-                    System.out.println("Listing all Projects...");
-                    // call method to list projects
+                    proCat.displayProjects();
                     break;
                 case 3:
                     System.out.println("Creating a new Task...");
-                    tc.createTaskFromUserInput(scanner, taskCat, proCat);
+                    tc.createTaskFromUserInput(scanner, taskCat, proCat, recCat);
                     break;
                 case 4:
                     System.out.println("Listing all Tasks...");
-                    // call method to list tasks
+                    taskCat.displayTasks();
                     break;
                 case 5:
                     System.out.println("Creating a new Subtask...");
-                    // call method to create subtask
+                    tc.createSubtaskUI(scanner, subCat, taskCat);
                     break;
                 case 6:
-                    System.out.println("Listing all Subtasks...");
-                    // call method to list subtasks
+                    System.out.println("Choose a task ID from this list:");
+                    taskCat.displayTasks();
+                    int taskID = scanner.nextInt();
+                    subCat.displaySubtasksByTaskId(taskID);
                     break;
                 case 7:
                     System.out.println("Adding a Record to a Task...");
@@ -231,7 +232,7 @@ public class Main {
                             org.example.models.Task occ = new org.example.models.Task(
                                     templateTask.getTitle(), "Occurrence " + (i + 1),
                                     new java.util.Date(), templateTask.getPriorityLevel(),
-                                    "todo", occDate, templateTask.getProjectId());
+                                    StatusType.TODO, occDate, templateTask.getProjectId());
                             taskCat.addTask(occ);
                         }
                         System.out.println("All occurrences saved as individual tasks.");
@@ -416,7 +417,9 @@ public class Main {
                             case 1:
                                 System.out.print("New status (todo, in_progress, blocked, done): ");
                                 String newStatus = scanner.nextLine();
-                                tc.updateTaskStatus(conn, updateTaskId, newStatus);
+                                tc.updateTaskStatus(conn, updateTaskId, newStatus, subCat);
+
+                                recCat.addRecord("Task status updated to " + newStatus, updateTaskId);
                                 break;
                             case 2:
                                 System.out.print("New due date in days from today (integer): ");
@@ -424,6 +427,8 @@ public class Main {
                                     int days = Integer.parseInt(scanner.nextLine().trim());
                                     java.util.Date newDue = new java.util.Date(System.currentTimeMillis() + days * 24L * 60 * 60 * 1000);
                                     tc.updateTaskDueDate(conn, updateTaskId, newDue);
+
+                                    recCat.addRecord("Task due date updated", updateTaskId);
                                 } catch (NumberFormatException e) {
                                     System.out.println("Invalid input. Due date not updated.");
                                 }
@@ -450,6 +455,8 @@ public class Main {
                                     org.example.models.Subtask created = colCat.assignTaskToCollaborator(updateTaskId, collabId, subtaskTitle);
                                     if (created != null) {
                                         subCat.getSubtasks().add(created); // keep in-memory list in sync
+
+                                        recCat.addRecord("Subtask created and assigned to collaborator ID " + collabId, updateTaskId);
                                     }
                                 } catch (java.util.InputMismatchException e) {
                                     System.out.println("Invalid input.");
@@ -482,6 +489,8 @@ public class Main {
                                     System.out.print("New status (todo, in_progress, blocked, done): ");
                                     String subtaskStatus = scanner.nextLine();
                                     subCat.updateSubtaskStatus(subtaskId, subtaskStatus);
+
+                                    recCat.addRecord("Subtask " + subtaskId + " status updated to " + subtaskStatus, updateTaskId);
                                     // warn if reopening causes collaborator overload
                                     if (!subtaskStatus.trim().equalsIgnoreCase("done")) {
                                         for (org.example.models.Subtask s : subCat.getSubtasks()) {

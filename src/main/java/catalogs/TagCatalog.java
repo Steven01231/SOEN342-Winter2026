@@ -1,5 +1,6 @@
 package catalogs;
 
+import org.example.models.PriorityLevel;
 import org.example.models.Tag;
 import org.example.models.Task;
 
@@ -135,7 +136,7 @@ public class TagCatalog {
                     Task task = new Task(rs.getString("title"), rs.getString("description"));
                     task.setTaskId(rs.getInt("id"));
                     task.setCreationDate(new java.util.Date(rs.getLong("creation_date")));
-                    task.setPriorityLevel(rs.getInt("priority_level"));
+                    task.setPriorityLevel(PriorityLevel.fromValue(rs.getInt("priority_level")));
                     task.setStatus(rs.getString("status"));
                     task.setDueDate(new java.util.Date(rs.getLong("due_date")));
                     task.setProjectId(rs.getInt("project_id"));

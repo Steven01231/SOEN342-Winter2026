@@ -67,5 +67,19 @@ public class ProjectCatalog {
         return generatedId;
     }
 
+    public void displayProjects() {
+        if (projects.isEmpty()) {
+            System.out.println("No projects available.");
+            return;
+        }
+
+        System.out.println("==== Project List ====");
+        for (Project p : projects) {
+            System.out.println("ID: " + p.getId());
+            System.out.println("Name: " + p.getName());
+            System.out.println("Description: " + p.getDescription());
+            System.out.println("----------------------");
+        }
+    }
 
 }

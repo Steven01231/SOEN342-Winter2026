@@ -11,3 +11,9 @@
 All diagrams and operations are posted in the wiki in ITERATION 1 page
 
 Link: https://github.com/Steven01231/SOEN342-Winter2026/wiki/ITERATION-1
+
+## Iteration 2
+
+All updated and additional diagrams are posted in the wiki in the ITERATION 2 page
+
+Link: https://github.com/Steven01231/SOEN342-Winter2026/wiki/ITERATION-2
