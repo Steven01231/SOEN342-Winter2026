@@ -123,8 +123,15 @@ public class Main {
                             ec.exportSingleTask(taskID2,taskCat);
                             break;
                         case 2:
+                            proCat.displayProjects();
+                            System.out.print("Select a Project:");
+
+                            int projectID = scanner.nextInt();
+
+                            ec.exportTasksByProject(projectID, taskCat);
                             break;
                         case 3:
+                            ec.exportTasksByThisWeek(taskCat);
                             break;
                     }
 
