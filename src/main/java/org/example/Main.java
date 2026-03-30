@@ -108,7 +108,7 @@ public class Main {
                     System.out.println("\n--- Export Calendar ---");
                     System.out.println("1. Export a Single Task");
                     System.out.println("2. Export all Tasks in a Project");
-                    System.out.println("3. Export all Open Tasks");
+                    System.out.println("3. Export all Tasks Due this Week");
                     System.out.print("Select an option: ");
 
                     int option = scanner.nextInt();
