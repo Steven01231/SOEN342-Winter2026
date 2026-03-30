@@ -529,6 +529,7 @@ public class Main {
                     System.out.println("  1. Create a Collaborator");
                     System.out.println("  2. Update Collaborator Task Limit");
                     System.out.println("  3. List Collaborators");
+                    System.out.println("  4. List Overloaded Collaborators");
                     System.out.print("Select sub-option: ");
                     try {
                         int collabChoice = scanner.nextInt();
@@ -577,6 +578,31 @@ public class Main {
                                             + " | Category: " + c.getCategory()
                                             + " | Open tasks: " + open + "/" + c.getTaskLimit()
                                             + " | Project ID: " + c.getProjectId());
+                                    }
+                                }
+                                break;
+                            case 4:
+                                System.out.println("\n--- Overloaded Collaborators ---");
+                                boolean foundOverloaded = false;
+
+                                if (colCat.getCollaborators().isEmpty()) {
+                                    System.out.println("No collaborators found in the system.");
+                                } else {
+                                    for (org.example.models.Collaborator c : colCat.getCollaborators()) {
+                                        int openTasks = colCat.countOpenTasks(c.getId());
+
+                                        // Check if open tasks exceed the limit
+                                        if (openTasks > c.getTaskLimit()) {
+                                            System.out.println("  WARNING: Collaborator ID " + c.getId()
+                                                    + " (" + c.getCategory() + ") is OVERLOADED.");
+                                            System.out.println("  -> Open tasks: " + openTasks + " | Limit: " + c.getTaskLimit());
+                                            System.out.println("  -> Project ID: " + c.getProjectId() + "\n");
+                                            foundOverloaded = true;
+                                        }
+                                    }
+
+                                    if (!foundOverloaded) {
+                                        System.out.println("All good! No collaborators are currently overloaded.");
                                     }
                                 }
                                 break;
