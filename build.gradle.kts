@@ -18,6 +18,7 @@ dependencies {
 // Optional: SLF4J (SQLite often looks for a logger to avoid warnings)
     implementation("org.slf4j:slf4j-simple:2.0.9")
     implementation(kotlin("stdlib-jdk8"))
+    implementation("org.mnode.ical4j:ical4j:4.0.0")
 }
 
 tasks.test {
@@ -25,4 +26,10 @@ tasks.test {
 }
 kotlin {
     jvmToolchain(25)
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
 }

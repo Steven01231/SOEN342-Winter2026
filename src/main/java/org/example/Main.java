@@ -10,6 +10,7 @@ import java.util.Scanner;
 import catalogs.*;
 import database.TaskController;
 import org.example.controllers.CSVController;
+import org.example.controllers.ExportController;
 import org.example.models.StatusType;
 import org.example.models.Task;
 import org.example.utils.CSVExporter;
@@ -29,6 +30,7 @@ public class Main {
 
         String url = "jdbc:sqlite:Organizer.db";
         TaskController tc = new TaskController();
+        ExportController ec = new ExportController();
         Connection conn = null; // declare outside try
 
         Scanner scanner = new Scanner(System.in);
@@ -61,7 +63,7 @@ public class Main {
             System.out.println("4. List all Tasks");
             System.out.println("5. Create a new Subtask");
             System.out.println("6. List all Subtasks");
-            System.out.println("7. Add a Record to a Task");
+            System.out.println("7. Export tasks to iCalendar");
             System.out.println("8. List Records");
             System.out.println("9. Set Recurrence Pattern for Task");
             System.out.println("10. List Recurrence Patterns");
@@ -103,8 +105,36 @@ public class Main {
                     subCat.displaySubtasksByTaskId(taskID);
                     break;
                 case 7:
-                    System.out.println("Adding a Record to a Task...");
-                    // call method to add record
+                    System.out.println("\n--- Export Calendar ---");
+                    System.out.println("1. Export a Single Task");
+                    System.out.println("2. Export all Tasks in a Project");
+                    System.out.println("3. Export all Tasks Due this Week");
+                    System.out.print("Select an option: ");
+
+                    int option = scanner.nextInt();
+
+                    switch (option){
+                        case 1:
+                            taskCat.displayTasks();
+                            System.out.print("Select a task: ");
+
+                            int taskID2 = scanner.nextInt();
+
+                            ec.exportSingleTask(taskID2,taskCat);
+                            break;
+                        case 2:
+                            proCat.displayProjects();
+                            System.out.print("Select a Project:");
+
+                            int projectID = scanner.nextInt();
+
+                            ec.exportTasksByProject(projectID, taskCat);
+                            break;
+                        case 3:
+                            ec.exportTasksByThisWeek(taskCat);
+                            break;
+                    }
+
                     break;
                 case 8:
                     System.out.println("\n--- View Task Activity History ---");
