@@ -29,7 +29,12 @@ You'll find all our final artifacts in our wiki page "FINAL ARTIFACTS" at https:
 1. Clone this repository to your local machine.
 2. Make sure you have Java installed and that the `iCal4j` library is properly included in your build path.
 3. Compile the code and initialize the database.
-4. Run the main application file directly from your terminal. 
+4. Run the main application file directly from your terminal.
+
+## Demo Link
+
+https://github.com/user-attachments/assets/3b526b90-d894-40c0-b117-6944f6ced7ad
+
 
 ---
 **Team Members:**
