@@ -5,6 +5,7 @@ import net.fortuna.ical4j.model.Calendar;
 import net.fortuna.ical4j.model.component.VEvent;
 import net.fortuna.ical4j.model.component.VToDo;
 import net.fortuna.ical4j.model.property.*;
+import net.fortuna.ical4j.model.property.immutable.ImmutableVersion;
 import net.fortuna.ical4j.validate.ValidationException;
 import org.example.models.Task;
 
@@ -20,7 +21,7 @@ public class CalendarGateway implements ICalendarGateway {
     public void exportCalendar(List<Task> tasks, OutputStream outputStream) throws IOException {
         Calendar calendar = new Calendar();
         calendar.add(new ProdId("-//My Organization//My Product//EN"));
-        calendar.add(new Version());
+        calendar.add(ImmutableVersion.VERSION_2_0);
         calendar.add(new CalScale("GREGORIAN"));
 
         // 2. Map your domain 'Task' objects to iCal4j 'VToDo' components
@@ -38,28 +39,32 @@ public class CalendarGateway implements ICalendarGateway {
             String combinedTitle = task.getTitle();
             VEvent event = new VEvent(start, end, combinedTitle);
 
-            // 3. Mandatory Unique ID and Timestamp
+            // 3. Mandatory Unique ID
             event.add(new Uid(String.valueOf(task.getTaskId())));
-            event.add(new DtStamp(Instant.now()));
 
             // 4. Description
             if (task.getDescription() != null) {
                 event.add(new Description(task.getDescription()));
             }
 
-            // 5. Status Mapping
-            // Standard values: NEEDS-ACTION, IN-PROCESS, COMPLETED, CANCELLED
+            // 5. Status Mapping (RFC 5545 VEVENT values: TENTATIVE, CONFIRMED, CANCELLED)
             if (task.getStatus() != null) {
-                event.add(new Status(task.getStatus().toString().toUpperCase()));
+                String icalStatus = switch (task.getStatus().toString().toUpperCase()) {
+                    case "DONE"        -> "CANCELLED";
+                    case "IN_PROGRESS" -> "CONFIRMED";
+                    default            -> "TENTATIVE";
+                };
+                event.add(new Status(icalStatus));
             }
 
             // 6. Priority Mapping (1=High, 5=Medium, 9=Low)
             if (task.getPriorityLevel() != null) {
                 int pVal = switch (task.getPriorityLevel()) {
-                    case HIGH -> 1;
-                    case MEDIUM -> 5;
-                    case LOW -> 9;
-                    default -> 0;
+                    case URGENT   -> 1;
+                    case CRITICAL -> 1;
+                    case HIGH     -> 2;
+                    case MEDIUM   -> 5;
+                    case LOW      -> 9;
                 };
                 event.add(new Priority(pVal));
             }

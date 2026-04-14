@@ -96,12 +96,13 @@ public class Main {
                     break;
                 case 5:
                     System.out.println("Creating a new Subtask...");
-                    tc.createSubtaskUI(scanner, subCat, taskCat);
+                    tc.createSubtaskUI(scanner, subCat, taskCat, colCat);
                     break;
                 case 6:
                     System.out.println("Choose a task ID from this list:");
                     taskCat.displayTasks();
-                    int taskID = scanner.nextInt();
+                    System.out.print("Enter task ID: ");
+                    int taskID = Integer.parseInt(scanner.nextLine().trim());
                     subCat.displaySubtasksByTaskId(taskID);
                     break;
                 case 7:
@@ -165,6 +166,8 @@ public class Main {
                 case 9:
                     System.out.println("\n--- Set Recurrence Pattern for Task ---");
                     try {
+                        System.out.println("Available tasks:");
+                        taskCat.displayTasks();
                         System.out.print("Enter Task ID to make recurring: ");
                         int recTaskId = Integer.parseInt(scanner.nextLine().trim());
 
@@ -429,6 +432,7 @@ public class Main {
                     break;
                 case 14:
                     System.out.println("\n--- Update Task ---");
+                    taskCat.displayTasks();
                     System.out.print("Enter Task ID to update: ");
                     try {
                         int updateTaskId = scanner.nextInt();
@@ -467,6 +471,7 @@ public class Main {
                                 System.out.println("Available collaborators:");
                                 if (colCat.getCollaborators().isEmpty()) {
                                     System.out.println("  (none — use option 15 to create one first)");
+                                    break;
                                 } else {
                                     for (org.example.models.Collaborator c : colCat.getCollaborators()) {
                                         int open = colCat.countOpenTasks(c.getId());

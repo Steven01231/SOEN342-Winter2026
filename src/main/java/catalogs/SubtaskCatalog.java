@@ -114,6 +114,24 @@ public class SubtaskCatalog {
         }
     }
 
+    public void displayAllSubtasks() {
+        if (subtasks.isEmpty()) {
+            System.out.println("No subtasks found.");
+            return;
+        }
+
+        System.out.printf("%-5s %-20s %-15s %-10s%n", "ID", "Title", "Status", "Task ID");
+        System.out.println("----------------------------------------------------");
+
+        for (Subtask subtask : subtasks) {
+            System.out.printf("%-5d %-20s %-15s %-10d%n",
+                    subtask.getId(),
+                    subtask.getTitle(),
+                    subtask.getStatus(),
+                    subtask.getTaskId());
+        }
+    }
+
     public void displaySubtasksByTaskId(int taskId) {
         boolean found = false;
 

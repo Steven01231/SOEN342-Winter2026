@@ -310,7 +310,7 @@ public class TaskController{
         System.out.println("Task created successfully!");
     }
 
-    public void createSubtaskUI(Scanner scanner, SubtaskCatalog catalog, TaskCatalog taskCat) {
+    public void createSubtaskUI(Scanner scanner, SubtaskCatalog catalog, TaskCatalog taskCat, catalogs.CollaboratorCatalog colCat) {
 
         System.out.println("=== Create Subtask ===");
 
@@ -319,7 +319,7 @@ public class TaskController{
         String title = scanner.nextLine();
 
         // Status
-        System.out.print("Enter status (e.g., todo, in progress, done): ");
+        System.out.print("Enter status (e.g., todo, in_progress, blocked, done): ");
         String status = scanner.nextLine();
 
         // Task ID
@@ -334,8 +334,20 @@ public class TaskController{
         int collaboratorId = -1; // default value
 
         if (choice == 'y') {
-            System.out.print("Enter collaborator ID: ");
-            collaboratorId = scanner.nextInt();
+            if (colCat.getCollaborators().isEmpty()) {
+                System.out.println("No collaborators available. Use option 15 to create one first.");
+            } else {
+                System.out.println("Available collaborators:");
+                for (org.example.models.Collaborator c : colCat.getCollaborators()) {
+                    int open = colCat.countOpenTasks(c.getId());
+                    System.out.println("  ID: " + c.getId()
+                            + " | Category: " + c.getCategory()
+                            + " | Open tasks: " + open + "/" + c.getTaskLimit()
+                            + " | Project ID: " + c.getProjectId());
+                }
+                System.out.print("Enter collaborator ID: ");
+                collaboratorId = scanner.nextInt();
+            }
         }
 
         scanner.nextLine(); // clear buffer

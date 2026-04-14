@@ -1,7 +1,6 @@
 package org.example.dto;
 
 import org.example.models.PriorityLevel;
-import org.example.models.StatusType;
 
 public class TaskDTO {
     public String taskName;
@@ -22,7 +21,11 @@ public class TaskDTO {
             this.description = row[1];
             this.subtask = row[2];
             this.status = row[3];
-            this.priority = PriorityLevel.valueOf(row[4]);
+            try {
+                this.priority = PriorityLevel.fromValue(Integer.parseInt(row[4].trim()));
+            } catch (IllegalArgumentException ignored) {
+                this.priority = PriorityLevel.LOW;
+            }
             this.dueDate = row[5];
             this.projectName = row[6];
             this.projectDescription = row[7];

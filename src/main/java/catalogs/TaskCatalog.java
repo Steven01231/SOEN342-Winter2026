@@ -221,19 +221,23 @@ public class TaskCatalog {
             return;
         }
 
-        System.out.printf("%-5s %-20s %-12s %-12s %-20s %-20s %-10s%n",
+        java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd");
+
+        System.out.printf("%-5s %-20s %-12s %-12s %-12s %-12s %-10s%n",
                 "ID", "Title", "Priority", "Status", "Created", "Due", "Project");
 
         System.out.println("--------------------------------------------------------------------------------------------");
 
         for (Task t : tasks) {
-            System.out.printf("%-5d %-20s %-12s %-12s %-20s %-20s %-10d%n",
+            String created = t.getCreationDate() != null ? sdf.format(t.getCreationDate()) : "-";
+            String due     = t.getDueDate()      != null ? sdf.format(t.getDueDate())      : "-";
+            System.out.printf("%-5d %-20s %-12s %-12s %-12s %-12s %-10d%n",
                     t.getTaskId(),
                     t.getTitle(),
                     t.getPriorityLevel(),
                     t.getStatus(),
-                    t.getCreationDate(),
-                    t.getDueDate(),
+                    created,
+                    due,
                     t.getProjectId());
         }
     }

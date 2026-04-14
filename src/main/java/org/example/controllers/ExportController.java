@@ -22,7 +22,6 @@ public class ExportController {
                 tasks.add(task);
             }
         }
-        System.out.println(tasks);
         CalendarGateway calGat = new CalendarGateway();
 
         try (OutputStream outputStream = new FileOutputStream("my-tasks.ics")) {
@@ -38,7 +37,6 @@ public class ExportController {
                 // .filter(t -> t.getTaskId() != null) <-- REMOVE THIS LINE
                 .filter(t -> t.getProjectId() == projectID) // Direct comparison is safe
                 .toList();
-        System.out.println(tasks);
         CalendarGateway calGat = new CalendarGateway();
 
         try (OutputStream outputStream = new FileOutputStream("my-tasks.ics")) {
@@ -59,7 +57,6 @@ public class ExportController {
                     return !due.isBefore(now) && !due.isAfter(weekEnd);
                 })
                 .toList();
-        System.out.println(tasks);
         CalendarGateway calGat = new CalendarGateway();
 
         try (OutputStream outputStream = new FileOutputStream("my-tasks.ics")) {
