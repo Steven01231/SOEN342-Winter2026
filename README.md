@@ -17,7 +17,7 @@ Welcome to our final project repository! This is a command-line Personal Task Ma
 * **OCL Constraints:** All the strict business rules (like the max 20 subtasks, the 50 open task limit, and the positive integer limits for collaborators) are formally documented using Object Constraint Language.
 
 ## Required Deliverables
-You'll find all our final artifacts in our wiki page "FINAL ARTIFACTS" at https://github.com/Steven01231/SOEN342-Winter2026/wiki/FINAL-ARTIFACTS :
+You'll find all our final artifacts in our project folder "FINAL ARTIFACTS" or on our wiki page "FINAL ARTIFACTS" at https://github.com/Steven01231/SOEN342-Winter2026/wiki/FINAL-ARTIFACTS :
 * Use-Case Diagrams (Critical & Non-critical)
 * UML Domain Model & Class Diagrams (including the updated Gateway pattern design)
 * System Sequence Diagrams (SSDs) & Fully-Dressed Scenarios
